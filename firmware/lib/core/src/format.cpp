@@ -53,6 +53,20 @@ char* formatGear(int8_t gear, char* out, size_t n) {
   return out;
 }
 
+const char* raceFlagText(RaceFlag f) {
+  switch (f) {
+    case RaceFlag::Green: return "GREEN FLAG";
+    case RaceFlag::Yellow: return "YELLOW FLAG";
+    case RaceFlag::Blue: return "BLUE FLAG";
+    case RaceFlag::White: return "WHITE FLAG";
+    case RaceFlag::Black: return "BLACK FLAG";
+    case RaceFlag::Chequered: return "CHEQUERED FLAG";
+    case RaceFlag::Red: return "RED FLAG";
+    case RaceFlag::None: break;
+  }
+  return "";
+}
+
 char* formatTemp(int16_t temp_x10, char* out, size_t n) {
   const int a = abs(static_cast<int>(temp_x10));
   snprintf(out, n, "%s%d.%d", temp_x10 < 0 ? "-" : "", a / 10, a % 10);

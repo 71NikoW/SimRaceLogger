@@ -60,6 +60,13 @@ TEST(gear) {
   CHECK_STR(formatGear(6, b, sizeof b), "6");
 }
 
+TEST(race_flag_text) {
+  CHECK_STR(raceFlagText(RaceFlag::Yellow), "YELLOW FLAG");
+  CHECK_STR(raceFlagText(RaceFlag::Chequered), "CHEQUERED FLAG");
+  CHECK_STR(raceFlagText(RaceFlag::None), "");
+  CHECK_STR(raceFlagText(static_cast<RaceFlag>(42)), "");
+}
+
 TEST(temperature) {
   char b[8];
   CHECK_STR(formatTemp(261, b, sizeof b), "26.1");

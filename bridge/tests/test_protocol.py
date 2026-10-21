@@ -1,6 +1,6 @@
 import pytest
 
-from rigdash.model import Flag, Session, Telemetry
+from rigdash.model import Flag, RaceFlag, Session, Telemetry
 from rigdash.protocol import (
     MAX_PAYLOAD, MSG_HELLO, MSG_TELEMETRY, MSG_TRACK_INFO, TELEMETRY_SIZE,
     FrameParser, crc16, decode_telemetry, encode_frame, encode_hello,
@@ -14,8 +14,8 @@ def test_crc16_ccitt_false_check_value():
 
 
 def test_telemetry_payload_size():
-    assert TELEMETRY_SIZE == 37
-    assert len(encode_telemetry(Telemetry())) == 3 + 37 + 2
+    assert TELEMETRY_SIZE == 38
+    assert len(encode_telemetry(Telemetry())) == 3 + 38 + 2
 
 
 def test_telemetry_roundtrip():
@@ -60,8 +60,21 @@ def test_parser_drops_corrupted_frame_and_recovers():
 
 def test_unknown_session_value_maps_to_unknown():
     payload = bytearray(encode_telemetry(Telemetry(session=Session.RACE))[3:-2])
-    payload[-1] = 99
+    payload[36] = 99
     assert decode_telemetry(bytes(payload)).session is Session.UNKNOWN
+
+
+def test_race_flag_roundtrip_and_unknown_value():
+    payload = bytearray(encode_telemetry(Telemetry(race_flag=RaceFlag.BLUE))[3:-2])
+    assert decode_telemetry(bytes(payload)).race_flag is RaceFlag.BLUE
+    payload[37] = 200
+    assert decode_telemetry(bytes(payload)).race_flag is RaceFlag.NONE
+
+
+def test_old_37_byte_payload_still_decodes():
+    payload = encode_telemetry(Telemetry(lap_number=7, race_flag=RaceFlag.RED))[3:-2][:37]
+    t = decode_telemetry(payload)
+    assert t.lap_number == 7 and t.race_flag is RaceFlag.NONE
 
 
 def test_reserved_flag_bits_ignored():

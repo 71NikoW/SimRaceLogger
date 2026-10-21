@@ -3,7 +3,7 @@
 import struct
 from typing import Iterator
 
-from .model import Flag, Session, Telemetry
+from .model import Flag, RaceFlag, Session, Telemetry
 
 PROTOCOL_VERSION = 1
 SOF = 0xA5
@@ -14,8 +14,10 @@ MSG_HELLO = 0x01
 MSG_TELEMETRY = 0x10
 MSG_TRACK_INFO = 0x11
 
-_TELEMETRY = struct.Struct("<IIIIiHBbHHHhhHB")
-TELEMETRY_SIZE = _TELEMETRY.size  # 37
+_TELEMETRY = struct.Struct("<IIIIiHBbHHHhhHBB")
+TELEMETRY_SIZE = _TELEMETRY.size  # 38
+# v1.0 payloads ended before race_flag; still accepted.
+TELEMETRY_MIN_SIZE = 37
 
 
 def crc16(data: bytes) -> int:
@@ -61,6 +63,7 @@ def encode_telemetry(t: Telemetry) -> bytes:
         _clamp(t.track_temp_x10, -0x8000, 0x7FFF),
         int(t.flags) & 0xFFFF,
         int(t.session) & 0xFF,
+        int(t.race_flag) & 0xFF,
     )
     return encode_frame(MSG_TELEMETRY, payload)
 
@@ -73,14 +76,15 @@ def encode_track_info(name: str) -> bytes:
 
 
 def decode_telemetry(payload: bytes) -> Telemetry:
-    if len(payload) < TELEMETRY_SIZE:
+    if len(payload) < TELEMETRY_MIN_SIZE:
         raise ValueError("telemetry payload too short")
-    v = _TELEMETRY.unpack_from(payload)
+    v = _TELEMETRY.unpack_from(bytes(payload[:TELEMETRY_SIZE]).ljust(TELEMETRY_SIZE, b"\0"))
     return Telemetry(
         current_lap_ms=v[0], last_lap_ms=v[1], best_lap_ms=v[2], last_pit_ms=v[3],
         delta_ms=v[4], lap_number=v[5], position=v[6], gear=v[7], speed_kmh=v[8],
         fuel_laps_x10=v[9], track_pos=v[10], air_temp_x10=v[11], track_temp_x10=v[12],
         flags=Flag(v[13] & 0x1F), session=Session(v[14]) if v[14] <= 4 else Session.UNKNOWN,
+        race_flag=RaceFlag(v[15]) if v[15] <= 7 else RaceFlag.NONE,
     )
 
 

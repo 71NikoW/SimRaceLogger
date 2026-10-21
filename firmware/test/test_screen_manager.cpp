@@ -107,3 +107,48 @@ TEST(no_signal_beats_everything) {
   m.onTelemetry(t, 0);
   CHECK(m.current(kSignalTimeoutMs + 1) == Screen::NoSignal);
 }
+
+TEST(blink_phase) {
+  CHECK(blinkOn(0));
+  CHECK(blinkOn(kBlinkPeriodMs / 2 - 1));
+  CHECK(!blinkOn(kBlinkPeriodMs / 2));
+  CHECK(!blinkOn(kBlinkPeriodMs - 1));
+  CHECK(blinkOn(kBlinkPeriodMs));
+}
+
+TEST(flag_change_shows_overlay_then_returns) {
+  ScreenManager m;
+  Telemetry t = driving();
+  t.race_flag = RaceFlag::Green;
+  m.onTelemetry(t, 0);
+  CHECK(m.current(0) == Screen::CurrentLap);  // first frame: no overlay
+  t.race_flag = RaceFlag::Yellow;
+  m.onTelemetry(t, 1000);
+  CHECK(m.current(1000) == Screen::RaceFlag);
+  CHECK(m.raceFlag() == RaceFlag::Yellow);
+  m.onTelemetry(t, 1000 + kFlagOverlayMs);
+  CHECK(m.current(1000 + kFlagOverlayMs) == Screen::CurrentLap);
+  CHECK(m.raceFlag() == RaceFlag::Yellow);  // strip stays while waved
+}
+
+TEST(flag_withdrawn_shows_no_overlay) {
+  ScreenManager m;
+  Telemetry t = driving();
+  t.race_flag = RaceFlag::Blue;
+  m.onTelemetry(t, 0);
+  t.race_flag = RaceFlag::None;
+  m.onTelemetry(t, 5000);
+  CHECK(m.current(5000) == Screen::CurrentLap);
+}
+
+TEST(flag_overlay_beats_pit_limiter_and_invalid_lap) {
+  ScreenManager m;
+  m.onTelemetry(driving(), 0);
+  Telemetry t = driving();
+  t.flags |= kFlagPitLimiter | kFlagLapInvalid;
+  t.race_flag = RaceFlag::Black;
+  m.onTelemetry(t, 100);
+  CHECK(m.current(100) == Screen::RaceFlag);
+  m.onTelemetry(t, 100 + kFlagOverlayMs);
+  CHECK(m.current(100 + kFlagOverlayMs) == Screen::PitLimiter);
+}

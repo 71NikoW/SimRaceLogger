@@ -22,6 +22,7 @@ char trackName[kMaxTrackName + 1] = "";
 const char* screenName(Screen s) {
   switch (s) {
     case Screen::NoSignal: return "WAITING FOR TELEMETRY";
+    case Screen::RaceFlag: return "RACE FLAG";
     case Screen::LapInvalidated: return "LAP INVALIDATED";
     case Screen::PitLimiter: return "PIT LIMITER ON";
     case Screen::EngineOff: return "ENGINE OFF";
@@ -59,8 +60,9 @@ void render(Screen s) {
   char lap[16], fuel[16];
   formatLapTime(telemetry.current_lap_ms, lap, sizeof lap);
   formatFuelLaps(telemetry.fuel_laps_x10, fuel, sizeof fuel);
-  Serial0.printf("[%s] %s  LAP %02u  POS %u  %s  %s\n", screenName(s), lap,
-                 telemetry.lap_number, telemetry.position, fuel, trackName);
+  Serial0.printf("[%s] %s  LAP %02u  POS %u  %s  %s  %s\n", screenName(s), lap,
+                 telemetry.lap_number, telemetry.position, fuel, raceFlagText(screens.raceFlag()),
+                 trackName);
 }
 
 }  // namespace

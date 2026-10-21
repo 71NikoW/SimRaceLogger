@@ -109,7 +109,7 @@ TEST(parser_back_to_back_frames) {
 }
 
 TEST(decode_telemetry_too_short) {
-  uint8_t buf[kTelemetrySize - 1] = {};
+  uint8_t buf[kTelemetryMinSize - 1] = {};
   Telemetry t;
   CHECK(!decodeTelemetry(buf, sizeof buf, t));
 }
@@ -120,6 +120,27 @@ TEST(decode_telemetry_accepts_longer_payload) {
   Telemetry t;
   CHECK(decodeTelemetry(buf, sizeof buf, t));
   CHECK(t.session == Session::Race);
+}
+
+TEST(decode_telemetry_old_37_byte_payload) {
+  uint8_t buf[kTelemetryMinSize] = {};
+  buf[20] = 7;
+  Telemetry t;
+  t.race_flag = RaceFlag::Red;
+  CHECK(decodeTelemetry(buf, sizeof buf, t));
+  CHECK_EQ(t.lap_number, 7);
+  CHECK(t.race_flag == RaceFlag::None);
+}
+
+TEST(decode_telemetry_race_flag) {
+  uint8_t buf[kTelemetrySize] = {};
+  Telemetry t;
+  buf[37] = 3;
+  CHECK(decodeTelemetry(buf, sizeof buf, t));
+  CHECK(t.race_flag == RaceFlag::Blue);
+  buf[37] = 99;
+  CHECK(decodeTelemetry(buf, sizeof buf, t));
+  CHECK(t.race_flag == RaceFlag::None);
 }
 
 TEST(decode_telemetry_unknown_session_and_reserved_flags) {

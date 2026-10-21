@@ -117,6 +117,8 @@ h1 {
 .led.on-blue  { background: #4d7bff; box-shadow: 0 0 10px 2px rgba(77,123,255,.8); }
 .led.on-green { background: #7cff5a; box-shadow: 0 0 10px 2px rgba(124,255,90,.8); }
 .led.on-red   { background: #ff3b2f; box-shadow: 0 0 10px 2px rgba(255,59,47,.85); }
+.led.on-yellow { background: #ffd60a; box-shadow: 0 0 10px 2px rgba(255,214,10,.85); }
+.led.on-white  { background: #ffffff; box-shadow: 0 0 10px 2px rgba(255,255,255,.8); }
 .bezel {
   border-radius: 10px;
   padding: 1.6%;
@@ -203,6 +205,10 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
   margin: 0;
 }
 .hex b { color: var(--accent); font-weight: 500; }
+.flags button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; }
+.flags button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.flags i { width: 14px; height: 10px; border-radius: 2px; background: var(--f); outline: 1px solid var(--line); }
+.flags i.cheq { background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 7px 5px; }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { .led, .switch i, .switch i::after { transition: none; } }
@@ -247,6 +253,19 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
       </div>
 
       <div class="group">
+        <div class="label">Race control</div>
+        <div class="row flags" id="flagButtons" role="radiogroup" aria-label="Race flag">
+          <button type="button" data-flag="1" aria-pressed="true"><i style="--f:#22c55e"></i>Green</button>
+          <button type="button" data-flag="2" aria-pressed="false"><i style="--f:#ffd60a"></i>Yellow</button>
+          <button type="button" data-flag="3" aria-pressed="false"><i style="--f:#2f7bff"></i>Blue</button>
+          <button type="button" data-flag="4" aria-pressed="false"><i style="--f:#f4f6fa"></i>White</button>
+          <button type="button" data-flag="5" aria-pressed="false"><i style="--f:#000"></i>Black</button>
+          <button type="button" data-flag="6" aria-pressed="false"><i class="cheq"></i>Chequered</button>
+          <button type="button" data-flag="7" aria-pressed="false"><i style="--f:#e11d1d"></i>Red</button>
+        </div>
+      </div>
+
+      <div class="group">
         <div class="label">USB link</div>
         <label class="toggle" for="tUsb"><span>Bridge connected</span><span class="switch"><input type="checkbox" id="tUsb" checked><i></i></span></label>
         <label class="toggle" for="tNoise"><span>Line noise</span><span class="switch"><input type="checkbox" id="tNoise"><i></i></span></label>
@@ -272,6 +291,7 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 const SOF = 0xA5, MAX_PAYLOAD = 64;
 const MSG_HELLO = 0x01, MSG_TELEMETRY = 0x10, MSG_TRACK_INFO = 0x11;
 const F_PIT = 1, F_INPIT = 2, F_INVALID = 4, F_ENGINE = 8, F_IGN = 16;
+const FLAGS = ["", "GREEN", "YELLOW", "BLUE", "WHITE", "BLACK", "CHEQUERED", "RED"];
 
 function crc16(bytes) {
   let crc = 0xFFFF;
@@ -292,7 +312,7 @@ function encodeFrame(type, payload) {
 }
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.trunc(v)));
 function encodeTelemetry(t) {
-  const p = new Uint8Array(37), d = new DataView(p.buffer);
+  const p = new Uint8Array(38), d = new DataView(p.buffer);
   d.setUint32(0, clamp(t.current_lap_ms, 0, 0xFFFFFFFF), true);
   d.setUint32(4, clamp(t.last_lap_ms, 0, 0xFFFFFFFF), true);
   d.setUint32(8, clamp(t.best_lap_ms, 0, 0xFFFFFFFF), true);
@@ -308,12 +328,13 @@ function encodeTelemetry(t) {
   d.setInt16(32, clamp(t.track_temp_x10, -0x8000, 0x7FFF), true);
   d.setUint16(34, t.flags & 0xFFFF, true);
   d.setUint8(36, t.session & 0xFF);
+  d.setUint8(37, t.race_flag & 0xFF);
   return encodeFrame(MSG_TELEMETRY, p);
 }
 function decodeTelemetry(p) {
   if (p.length < 37) return null;
   const d = new DataView(p.buffer, p.byteOffset, p.length);
-  const s = d.getUint8(36);
+  const s = d.getUint8(36), rf = p.length > 37 ? d.getUint8(37) : 0;
   return {
     current_lap_ms: d.getUint32(0, true), last_lap_ms: d.getUint32(4, true),
     best_lap_ms: d.getUint32(8, true), last_pit_ms: d.getUint32(12, true),
@@ -321,7 +342,7 @@ function decodeTelemetry(p) {
     position: d.getUint8(22), gear: d.getInt8(23), speed_kmh: d.getUint16(24, true),
     fuel_laps_x10: d.getUint16(26, true), track_pos: d.getUint16(28, true),
     air_temp_x10: d.getInt16(30, true), track_temp_x10: d.getInt16(32, true),
-    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0,
+    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0, race_flag: rf <= 7 ? rf : 0,
   };
 }
 class FrameParser {
@@ -350,19 +371,22 @@ class FrameParser {
 // ---------------------------------------------------------------------------
 // Screen manager (mirror of firmware/lib/core/src/screen_manager.cpp)
 // ---------------------------------------------------------------------------
-const SIGNAL_TIMEOUT = 2000, INVALID_OVERLAY = 2500;
+const SIGNAL_TIMEOUT = 2000, INVALID_OVERLAY = 2500, FLAG_OVERLAY = 3000, BLINK_PERIOD = 500;
+const blinkOn = now => (now % BLINK_PERIOD) < BLINK_PERIOD / 2;
 const PAGES = ["CurrentLap", "TrackData", "LapSummary"];
 class ScreenManager {
-  constructor() { this.page = 0; this.last = null; this.rx = 0; this.invalidSince = -1e9; }
+  constructor() { this.page = 0; this.last = null; this.rx = 0; this.invalidSince = -1e9; this.flagSince = -1e9; }
   onTelemetry(t, now) {
     const wasInvalid = this.last && (this.last.flags & F_INVALID);
     const newLap = this.last && t.lap_number !== this.last.lap_number;
     if ((t.flags & F_INVALID) && (!wasInvalid || newLap)) this.invalidSince = now;
+    if (this.last && t.race_flag !== this.last.race_flag && t.race_flag) this.flagSince = now;
     this.last = t; this.rx = now;
   }
   nextPage() { this.page = (this.page + 1) % PAGES.length; }
   current(now) {
     if (!this.last || now - this.rx > SIGNAL_TIMEOUT) return "NoSignal";
+    if (now - this.flagSince < FLAG_OVERLAY) return "RaceFlag";
     if (now - this.invalidSince < INVALID_OVERLAY) return "LapInvalidated";
     if (this.last.flags & F_PIT) return "PitLimiter";
     if (!(this.last.flags & F_ENGINE)) return "EngineOff";
@@ -424,7 +448,7 @@ const demo = {
       gear: !ui.engine ? 0 : ui.pit ? 2 : 1 + Math.floor(fr * 50) % 6,
       speed_kmh: !ui.engine ? 0 : ui.pit ? 60 : 120 + Math.floor(Math.abs(Math.sin(fr * 18)) * 140),
       fuel_laps_x10: Math.round(this.fuel * 10), track_pos: Math.floor(fr * 10000),
-      air_temp_x10: 261, track_temp_x10: 372, flags, session: 1,
+      air_temp_x10: 261, track_temp_x10: 372, flags, session: 1, race_flag: ui.flag,
       _moving: moving,
     };
   },
@@ -489,7 +513,35 @@ function trackXY(frac, bx, by, bw, bh) {
   return [bx + bw / 2 + x * bw * 0.36, by + bh / 2 + y * bh * 0.62];
 }
 
+const FLAG_COLORS = { 1: "#22c55e", 2: "#ffd60a", 3: "#2f7bff", 4: "#f4f6fa", 5: "#000000", 7: "#e11d1d" };
+function drawFlag(f, x, y, w, h) {
+  if (f === 6) {  // chequered
+    const n = 6, m = 4, cw = w / n, ch = h / m;
+    for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) rect(x + i * cw, y + j * ch, cw + .5, ch + .5, (i + j) % 2 ? "#000" : C.white);
+  } else {
+    rect(x, y, w, h, FLAG_COLORS[f] || "#333");
+    if (f === 3) { g.fillStyle = "#ffd60a"; g.beginPath(); g.moveTo(x, y + h); g.lineTo(x + w * 0.35, y + h); g.lineTo(x + w, y); g.lineTo(x + w * 0.65, y); g.closePath(); g.fill(); }
+  }
+  if (f === 5 || f === 6) { g.strokeStyle = "#5d6578"; g.lineWidth = 2; g.strokeRect(x, y, w, h); }
+}
+// Thin strip down the left edge of every screen while a flag (other than green) is waved.
+function flagStrip(f, now) {
+  if (f <= 1) return;
+  const visible = (f === 2 || f === 3 || f === 7) ? blinkOn(now) : true;
+  if (!visible) return;
+  if (f === 6) { drawFlag(6, 0, 0, 10, H); return; }
+  rect(0, 0, 8, H, f === 5 ? "#ff5a3c" : FLAG_COLORS[f]);
+}
+
 const screens = {
+  RaceFlag(t, now) {
+    const f = t.race_flag;
+    drawFlag(f, 0, 0, W, H);
+    const light = f === 2 || f === 4 || f === 1;
+    const label = `${FLAGS[f]} FLAG`;
+    if (f === 6 || f === 3) { rect(0, H / 2 - 52, W, 104, "rgba(0,0,0,.78)"); }
+    font(800, 96); text(label, W / 2, H / 2 + 34, f === 6 || f === 3 ? C.white : light ? "#111" : C.white, "center");
+  },
   NoSignal(t, now) {
     font(700, 40); text("WAITING FOR TELEMETRY", W / 2, 150, C.grey, "center");
     font(500, 20); text("Start the bridge on your PC · USB", W / 2, 186, "#5d6578", "center");
@@ -542,9 +594,15 @@ const screens = {
     font(700, 26); text("DELTA", 426, 130, "#000");
     fitText(t.best_lap_ms ? fmtDelta(t.delta_ms) : "--.--", 424, 236, 202, 800, 92, dc);
   },
-  PitLimiter(t) {
-    rect(0, 0, W, 126, C.lime);
-    font(800, 78); text("PIT LIMITER ON", W / 2, 96, "#0b1300", "center");
+  PitLimiter(t, now) {
+    const on = blinkOn(now);
+    const fw = t.race_flag > 1 ? 150 : 0;  // room for the flag badge
+    rect(0, 0, W - fw, 126, on ? C.lime : "#1a2408");
+    font(800, 78); text("PIT LIMITER", (W - fw) / 2, 96, on ? "#0b1300" : C.lime, "center");
+    if (fw) {
+      drawFlag(t.race_flag, W - fw + 8, 8, fw - 8, 82);
+      font(700, 22); text(FLAGS[t.race_flag], W - fw / 2 + 4, 118, C.white, "center");
+    }
     const cols = [["GEAR", fmtGear(t.gear)], ["SPEED", String(t.speed_kmh)],
                   ["POSITION", t.position ? String(t.position) : "-"], ["LAST PIT STOP", fmtLap(t.last_pit_ms)]];
     const cw = [120, 140, 150, 206];
@@ -583,21 +641,25 @@ const screens = {
 function render(name, t, now) {
   g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
   screens[name](t || {}, now);
+  if (t && name !== "RaceFlag" && name !== "NoSignal") flagStrip(t.race_flag, now);
 }
 
 // ---------------------------------------------------------------------------
 // Wiring: demo source → encode → (wire) → parse → decode → screen manager → render
 // ---------------------------------------------------------------------------
 const $ = id => document.getElementById(id);
-const ui = { pit: false, engine: true, usb: true, noise: false };
+const ui = { pit: false, engine: true, usb: true, noise: false, flag: 1 };
 const parser = new FrameParser();
 const sm = new ScreenManager();
 let latest = null, frames = 0, lastSend = 0, lastHello = -1e9, lastHex = null;
 
 const LED = { blue: "on-blue", green: "on-green", red: "on-red" };
-function setLeds(screen, now) {
+const LED_FLAG = { 2: "on-yellow", 3: "on-blue", 5: "on-red", 7: "on-red", 4: "on-white", 6: "on-white" };
+function setLeds(screen, now, t) {
   let cls = "";
-  if (screen === "PitLimiter") cls = LED.green;
+  const f = t ? t.race_flag : 0;
+  if (screen !== "NoSignal" && LED_FLAG[f]) cls = blinkOn(now) ? LED_FLAG[f] : "";
+  else if (screen === "PitLimiter") cls = blinkOn(now) ? LED.green : "";
   else if (screen === "LapInvalidated") cls = Math.floor(now / 160) % 2 ? LED.red : "";
   else if (screen !== "NoSignal" && screen !== "EngineOff") cls = LED.blue;
   for (const id of ["led1", "led2"]) $(id).className = "led " + cls;
@@ -605,7 +667,7 @@ function setLeds(screen, now) {
 
 const SCREEN_LABEL = {
   NoSignal: "Waiting for telemetry", CurrentLap: "Current lap", TrackData: "Track data",
-  LapSummary: "Lap summary", PitLimiter: "Pit limiter", LapInvalidated: "Lap invalidated", EngineOff: "Engine off",
+  LapSummary: "Lap summary", RaceFlag: "Race flag", PitLimiter: "Pit limiter", LapInvalidated: "Lap invalidated", EngineOff: "Engine off",
 };
 
 function wire(bytes) {
@@ -623,7 +685,7 @@ function updateReadout(t) {
     ["Lap time", fmtLap(t.current_lap_ms, 3)], ["Lap", t.lap_number], ["Last", fmtLap(t.last_lap_ms, 3)],
     ["Best", fmtLap(t.best_lap_ms, 3)], ["Delta", t.best_lap_ms ? fmtDelta(t.delta_ms) : "—"],
     ["Gear", fmtGear(t.gear)], ["Speed", `${t.speed_kmh} km/h`], ["Fuel", fmtFuel(t.fuel_laps_x10)],
-    ["Track pos", `${(t.track_pos / 100).toFixed(1)} %`], ["Flags", "0b" + t.flags.toString(2).padStart(5, "0")],
+    ["Track pos", `${(t.track_pos / 100).toFixed(1)} %`], ["Flags", "0b" + t.flags.toString(2).padStart(5, "0")], ["Race flag", FLAGS[t.race_flag] || "—"],
   ];
   $("readout").innerHTML = items.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
 }
@@ -652,7 +714,7 @@ function tick() {
   }
   const screen = sm.current(now);
   render(screen, latest, now);
-  setLeds(screen, now);
+  setLeds(screen, now, latest);
   $("screenName").textContent = SCREEN_LABEL[screen];
   $("frameCount").textContent = frames;
   $("crcErrors").textContent = parser.crcErrors;
@@ -670,6 +732,12 @@ let readoutTimer = setInterval(() => {
 $("btnPage").addEventListener("click", () => sm.nextPage());
 $("btnInvalid").addEventListener("click", () => { demo.invalid = true; });
 $("btnFinish").addEventListener("click", () => { demo.finish(performance.now()); });
+$("flagButtons").addEventListener("click", e => {
+  const b = e.target.closest("button[data-flag]");
+  if (!b) return;
+  ui.flag = Number(b.dataset.flag);
+  for (const x of $("flagButtons").children) x.setAttribute("aria-pressed", String(x === b));
+});
 $("tPit").addEventListener("change", e => { ui.pit = e.target.checked; });
 $("tEngine").addEventListener("change", e => { ui.engine = e.target.checked; });
 $("tUsb").addEventListener("change", e => { ui.usb = e.target.checked; });

@@ -63,6 +63,7 @@ TEST(vectors_telemetry_basic) {
   CHECK_EQ(t.track_temp_x10, 372);
   CHECK_EQ(t.flags, kFlagEngineOn | kFlagIgnitionOn);
   CHECK(t.session == Session::Practice);
+  CHECK(t.race_flag == RaceFlag::Green);
 }
 
 TEST(vectors_telemetry_pit) {
@@ -79,6 +80,7 @@ TEST(vectors_telemetry_pit) {
   CHECK_EQ(t.track_temp_x10, -12);
   CHECK_EQ(t.flags, kFlagPitLimiter | kFlagInPit | kFlagLapInvalid);
   CHECK(t.session == Session::Race);
+  CHECK(t.race_flag == RaceFlag::Yellow);
 }
 
 TEST(vectors_track_info) {

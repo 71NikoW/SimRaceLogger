@@ -21,7 +21,7 @@ uint32_t u32(const uint8_t* p) {
 }  // namespace
 
 bool decodeTelemetry(const uint8_t* p, size_t len, Telemetry& t) {
-  if (len < kTelemetrySize) return false;
+  if (len < kTelemetryMinSize) return false;
   t.current_lap_ms = u32(p + 0);
   t.last_lap_ms = u32(p + 4);
   t.best_lap_ms = u32(p + 8);
@@ -37,6 +37,8 @@ bool decodeTelemetry(const uint8_t* p, size_t len, Telemetry& t) {
   t.track_temp_x10 = static_cast<int16_t>(u16(p + 32));
   t.flags = u16(p + 34) & 0x1F;
   t.session = p[36] <= 4 ? static_cast<Session>(p[36]) : Session::Unknown;
+  const uint8_t flag = len > 37 ? p[37] : 0;
+  t.race_flag = flag <= 7 ? static_cast<RaceFlag>(flag) : RaceFlag::None;
   return true;
 }
 

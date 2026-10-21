@@ -15,6 +15,10 @@ enum Flags : uint16_t {
 
 enum class Session : uint8_t { Unknown = 0, Practice = 1, Qualifying = 2, Race = 3, Hotlap = 4 };
 
+enum class RaceFlag : uint8_t {
+  None = 0, Green = 1, Yellow = 2, Blue = 3, White = 4, Black = 5, Chequered = 6, Red = 7
+};
+
 struct Telemetry {
   uint32_t current_lap_ms = 0;
   uint32_t last_lap_ms = 0;
@@ -31,6 +35,7 @@ struct Telemetry {
   int16_t track_temp_x10 = 0;
   uint16_t flags = 0;
   Session session = Session::Unknown;
+  RaceFlag race_flag = RaceFlag::None;
 
   bool has(Flags f) const { return (flags & f) != 0; }
 };

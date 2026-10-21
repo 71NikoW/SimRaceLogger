@@ -27,7 +27,7 @@ locks up the display.
 
 Sent once on connect and every few seconds.
 
-### `0x10` TELEMETRY — 37 bytes, sent at 20–30 Hz
+### `0x10` TELEMETRY — 38 bytes, sent at 20–30 Hz
 
 | Field          | Type | Unit / meaning                                     |
 |----------------|------|----------------------------------------------------|
@@ -46,6 +46,10 @@ Sent once on connect and every few seconds.
 | track_temp_x10 | i16  | °C × 10                                            |
 | flags          | u16  | see below                                          |
 | session        | u8   | 0 unknown, 1 practice, 2 qualifying, 3 race, 4 hotlap |
+| race_flag      | u8   | 0 none, 1 green, 2 yellow, 3 blue, 4 white, 5 black, 6 chequered, 7 red |
+
+`race_flag` was appended after the first draft; 37-byte payloads without it
+are still accepted and decode as `none`.
 
 Flags: bit0 pit limiter, bit1 in pit lane, bit2 lap invalid, bit3 engine
 running, bit4 ignition on. Other bits reserved (send 0).

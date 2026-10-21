@@ -3,7 +3,7 @@
 Run from the repo root:  python -m rigdash.vectors > protocol/vectors.txt
 """
 
-from .model import Flag, Session, Telemetry
+from .model import Flag, RaceFlag, Session, Telemetry
 from .protocol import encode_hello, encode_telemetry, encode_track_info
 
 # Field values are duplicated in firmware/test/test_vectors.cpp — keep in sync.
@@ -12,12 +12,14 @@ TELEMETRY_BASIC = Telemetry(
     delta_ms=-345, lap_number=1, position=1, gear=3, speed_kmh=187,
     fuel_laps_x10=0, track_pos=4321, air_temp_x10=261, track_temp_x10=372,
     flags=Flag.ENGINE_ON | Flag.IGNITION_ON, session=Session.PRACTICE,
+    race_flag=RaceFlag.GREEN,
 )
 
 TELEMETRY_PIT = Telemetry(
     current_lap_ms=12_345, lap_number=5, position=12, gear=0, speed_kmh=0,
     fuel_laps_x10=0xFFFF, last_pit_ms=23_400, air_temp_x10=-55, track_temp_x10=-12,
     flags=Flag.PIT_LIMITER | Flag.IN_PIT | Flag.LAP_INVALID, session=Session.RACE,
+    race_flag=RaceFlag.YELLOW,
 )
 
 

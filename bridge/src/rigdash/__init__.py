@@ -1,5 +1,5 @@
 """PC bridge for the open-source rig lap display."""
 
-from .model import Flag, Session, Telemetry
+from .model import Flag, RaceFlag, Session, Telemetry
 
-__all__ = ["Flag", "Session", "Telemetry"]
+__all__ = ["Flag", "RaceFlag", "Session", "Telemetry"]

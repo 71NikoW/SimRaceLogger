@@ -3,7 +3,7 @@
 import random
 from typing import Optional
 
-from ..model import Flag, Session, Telemetry
+from ..model import Flag, RaceFlag, Session, Telemetry
 from .base import TelemetrySource
 
 
@@ -65,4 +65,5 @@ class DemoSource(TelemetrySource):
             speed_kmh=60 if in_pit else 120 + int(fraction * 1000) % 140,
             fuel_laps_x10=round(self.fuel_laps * 10), track_pos=int(fraction * 10000),
             air_temp_x10=261, track_temp_x10=372, flags=flags, session=Session.PRACTICE,
+            race_flag=RaceFlag.GREEN,
         )

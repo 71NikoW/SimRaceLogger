@@ -14,6 +14,17 @@ class Session(IntEnum):
     HOTLAP = 4
 
 
+class RaceFlag(IntEnum):
+    NONE = 0
+    GREEN = 1
+    YELLOW = 2
+    BLUE = 3
+    WHITE = 4
+    BLACK = 5
+    CHEQUERED = 6
+    RED = 7
+
+
 class Flag(IntFlag):
     NONE = 0
     PIT_LIMITER = 1 << 0
@@ -40,3 +51,4 @@ class Telemetry:
     track_temp_x10: int = 0
     flags: Flag = Flag.NONE
     session: Session = Session.UNKNOWN
+    race_flag: RaceFlag = RaceFlag.NONE

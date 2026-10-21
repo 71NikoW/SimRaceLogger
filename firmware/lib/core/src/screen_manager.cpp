@@ -10,6 +10,12 @@ void ScreenManager::onTelemetry(const Telemetry& t, uint32_t now_ms) {
     invalid_overlay_ = true;
     invalid_since_ms_ = now_ms;
   }
+  // Show the flag full-screen when it changes; not for the very first frame
+  // (connecting mid-session) and not when the flag is withdrawn.
+  if (have_data_ && t.race_flag != last_.race_flag && t.race_flag != RaceFlag::None) {
+    flag_overlay_ = true;
+    flag_since_ms_ = now_ms;
+  }
   last_ = t;
   have_data_ = true;
   last_rx_ms_ = now_ms;
@@ -30,6 +36,7 @@ bool ScreenManager::hasSignal(uint32_t now_ms) const {
 
 Screen ScreenManager::current(uint32_t now_ms) const {
   if (!hasSignal(now_ms)) return Screen::NoSignal;
+  if (flag_overlay_ && (now_ms - flag_since_ms_) < kFlagOverlayMs) return Screen::RaceFlag;
   if (invalid_overlay_ && (now_ms - invalid_since_ms_) < kInvalidOverlayMs) {
     return Screen::LapInvalidated;
   }

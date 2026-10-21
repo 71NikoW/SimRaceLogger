@@ -11,7 +11,9 @@ constexpr uint8_t kProtocolVersion = 1;
 constexpr uint8_t kSof = 0xA5;
 constexpr uint8_t kMaxPayload = 64;
 constexpr uint8_t kMaxTrackName = 48;
-constexpr uint8_t kTelemetrySize = 37;
+constexpr uint8_t kTelemetrySize = 38;
+// v1.0 payloads ended before race_flag; still accepted.
+constexpr uint8_t kTelemetryMinSize = 37;
 
 enum MsgType : uint8_t {
   kMsgHello = 0x01,

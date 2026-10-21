@@ -72,13 +72,15 @@ Taken from the reference pictures:
 | Current lap       | Big running lap time, session type, position, fuel laps, lap no.| default page                      |
 | Track data        | Track name, mini map with car position, fuel %, air/track temp  | page selected by button           |
 | Last lap / delta  | Last lap, best lap, delta to best                                | page selected by button           |
-| Pit limiter       | Green banner + gear, speed, position, last pit stop             | pit limiter active                |
+| Race flag         | Full-screen flag (yellow, blue, black, chequered …)             | 3 s after the flag changes        |
+| Pit limiter       | Blinking green banner + gear, speed, position, last pit stop, flag | pit limiter active             |
 | Lap invalidated   | Red warning                                                     | 2.5 s after lap becomes invalid   |
 | Engine off        | "ENGINE OFF"                                                    | engine not running                |
 | No signal         | "WAITING FOR TELEMETRY"                                         | no valid frame for > 2 s          |
 
-Priority (highest first): no signal → lap invalidated → pit limiter →
-engine off → selected page. This logic is in `screen_manager` and fully
+Priority (highest first): no signal → race flag → lap invalidated →
+pit limiter → engine off → selected page. While a flag is waved, every
+screen shows a flag-coloured strip and the LEDs take the flag colour. This logic is in `screen_manager` and fully
 unit-tested.
 
 ## Hardware (proposal, to be validated)
