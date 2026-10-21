@@ -78,7 +78,7 @@ If you want them brighter, feed the strip from a separate 5 V supply
 
 1. **Flash the board.** Plug it in, then:
    ```bash
-   git clone <this repo> && cd <repo>/firmware
+   git clone https://github.com/71NikoW/SimRaceLogger.git && cd SimRaceLogger/firmware
    pio run -t upload          # VS Code: PlatformIO → Upload
    ```
 2. **Try it without a game.** On the PC:

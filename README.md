@@ -1,4 +1,4 @@
-# X30 Race Session Logger — open-source rig lap display
+# SimRaceLogger — open-source rig lap display
 
 A small dash display for sim-racing rigs: big current lap time, lap number,
 position, fuel in laps, pit limiter, invalidated laps, engine state, track
