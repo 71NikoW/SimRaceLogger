@@ -1,0 +1,6 @@
+{
+  "name": "rigdash-core",
+  "version": "0.1.0",
+  "description": "Hardware-independent core of the rig lap display (protocol, formatting, screen logic)",
+  "build": { "includeDir": "include", "srcDir": "src" }
+}

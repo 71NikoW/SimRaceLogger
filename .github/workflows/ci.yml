@@ -1,0 +1,22 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "bridge[dev]"
+      - run: pytest bridge
+
+  firmware-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S firmware -B build -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure

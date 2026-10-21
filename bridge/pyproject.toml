@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rigdash"
+version = "0.1.0"
+description = "PC bridge: sim telemetry -> serial frames for the open-source rig lap display"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+rigdash-bridge = "rigdash.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
