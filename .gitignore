@@ -8,3 +8,4 @@ build/
 hardware/ledbar/out/*/gerbers/
 *.kicad_prl
 fp-info-cache
+hardware/SimRaceLogger-prototype.zip
