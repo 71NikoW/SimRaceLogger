@@ -76,3 +76,44 @@ TEST(temperature) {
   CHECK_STR(formatTemp(-5, b, sizeof b), "-0.5");
   CHECK_STR(formatTemp(0, b, sizeof b), "0.0");
 }
+
+TEST(units) {
+  char b[16];
+  CHECK_STR(formatTemp(261, b, sizeof b, true), "79.0");
+  CHECK_STR(formatTemp(0, b, sizeof b, true), "32.0");
+  CHECK_STR(formatTemp(-400, b, sizeof b, true), "-40.0");
+  CHECK_STR(formatSpeed(187, b, sizeof b), "187");
+  CHECK_STR(formatSpeed(187, b, sizeof b, true), "116");
+  CHECK_STR(formatSpeed(100, b, sizeof b, true), "62");
+  CHECK_STR(formatPressure(2750, b, sizeof b), "27.5");
+  CHECK_STR(formatPressure(2747, b, sizeof b), "27.5");
+  CHECK_STR(formatPressure(2750, b, sizeof b, true), "1.90");
+  CHECK_STR(formatPressure(65535, b, sizeof b, true), "45.18");
+}
+
+TEST(gap_duration_liters_bias_setting) {
+  char b[16];
+  CHECK_STR(formatGap(1234, b, sizeof b), "+1.2");
+  CHECK_STR(formatGap(-850, b, sizeof b), "-0.8");
+  CHECK_STR(formatGap(kGapUnknown, b, sizeof b), "--.-");
+  CHECK_STR(formatGap(5000000, b, sizeof b), "+999.9");
+  CHECK_STR(formatDuration(2712, b, sizeof b), "45:12");
+  CHECK_STR(formatDuration(3753, b, sizeof b), "1:02:33");
+  CHECK_STR(formatDuration(0, b, sizeof b), "0:00");
+  CHECK_STR(formatDuration(kTimeLeftUnknown, b, sizeof b), "--:--");
+  CHECK_STR(formatLiters(425, b, sizeof b), "42.5 L");
+  CHECK_STR(formatBias(565, b, sizeof b), "56.5%");
+  CHECK_STR(formatBias(0, b, sizeof b), "--.-%");
+  CHECK_STR(formatSetting(3, b, sizeof b), "3");
+  CHECK_STR(formatSetting(kSettingNa, b, sizeof b), "-");
+}
+
+TEST(texts) {
+  CHECK_STR(rainText(0), "DRY");
+  CHECK_STR(rainText(4), "HEAVY RAIN");
+  CHECK_STR(rainText(200), "STORM");
+  CHECK_STR(penaltyText(Penalty::StopGo), "STOP & GO");
+  CHECK_STR(penaltyText(Penalty::None), "");
+  CHECK_STR(compoundText(Compound::Inter), "INTER");
+  CHECK_STR(compoundText(Compound::Unknown), "");
+}

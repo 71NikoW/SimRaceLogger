@@ -40,8 +40,12 @@ cmake -S firmware -B build && cmake --build build && ctest --test-dir build
 ```bash
 rigdash-bridge --source demo --dry-run --frames 10       # print frames
 pip install -e "bridge[serial]"
-rigdash-bridge --source demo --port COM5                 # send to the display
+rigdash-bridge --source demo --port auto                 # find the display and send
+rigdash-bridge --port COM5 --pages current,delta,tyres,weather --units mph --log laps.csv
 ```
+
+`--log` appends one CSV row per completed lap (time, sectors, fuel used,
+weather) — open it in Excel or any spreadsheet.
 
 ## Flash the firmware
 
@@ -52,7 +56,8 @@ cd firmware && pio run -t upload
 ## Contributing
 
 Game adapters are the easiest way to help: implement
-`rigdash.sources.TelemetrySource` for your sim and register it in
+`rigdash.sources.TelemetrySource` for your sim (return a `Snapshot`; fill in
+what the game exposes, the bridge derives fuel per lap, sectors and lap history) and register it in
 `bridge/src/rigdash/sources/__init__.py`. Protocol changes must update
 `docs/PROTOCOL.md`, both implementations and `protocol/vectors.txt`.
 

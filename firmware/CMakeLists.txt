@@ -9,7 +9,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(rigdash_core
   lib/core/src/protocol.cpp
   lib/core/src/format.cpp
-  lib/core/src/screen_manager.cpp)
+  lib/core/src/screen_manager.cpp
+  lib/core/src/dash.cpp
+  lib/core/src/alerts.cpp)
 target_include_directories(rigdash_core PUBLIC lib/core/include)
 target_compile_options(rigdash_core PRIVATE -Wall -Wextra -Werror)
 
@@ -18,7 +20,9 @@ add_executable(core_tests
   test/test_protocol.cpp
   test/test_format.cpp
   test/test_screen_manager.cpp
-  test/test_vectors.cpp)
+  test/test_vectors.cpp
+  test/test_dash.cpp
+  test/test_alerts.cpp)
 target_link_libraries(core_tests rigdash_core)
 target_compile_options(core_tests PRIVATE -Wall -Wextra -Werror)
 target_compile_definitions(core_tests PRIVATE

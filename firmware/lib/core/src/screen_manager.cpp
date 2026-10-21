@@ -21,25 +21,38 @@ void ScreenManager::onTelemetry(const Telemetry& t, uint32_t now_ms) {
   last_rx_ms_ = now_ms;
 }
 
-void ScreenManager::nextPage() {
-  switch (page_) {
-    case Screen::CurrentLap: page_ = Screen::TrackData; break;
-    case Screen::TrackData: page_ = Screen::LapSummary; break;
-    default: page_ = Screen::CurrentLap; break;
+void ScreenManager::setPageMask(uint16_t mask) {
+  mask &= (1u << kPageCount) - 1;
+  mask_ = mask ? mask : 1u;
+  if (!enabled(static_cast<uint8_t>(page_))) step(+1);
+}
+
+void ScreenManager::step(int dir) {
+  uint8_t i = static_cast<uint8_t>(page_);
+  for (uint8_t n = 0; n < kPageCount; ++n) {
+    i = static_cast<uint8_t>((i + kPageCount + dir) % kPageCount);
+    if (enabled(i)) {
+      page_ = static_cast<Screen>(i);
+      return;
+    }
   }
 }
+
+void ScreenManager::nextPage() { step(+1); }
+void ScreenManager::prevPage() { step(-1); }
 
 bool ScreenManager::hasSignal(uint32_t now_ms) const {
   // Unsigned subtraction keeps working across the millis() wrap-around.
   return have_data_ && (now_ms - last_rx_ms_) <= kSignalTimeoutMs;
 }
 
-Screen ScreenManager::current(uint32_t now_ms) const {
+Screen ScreenManager::current(uint32_t now_ms, bool alert_active) const {
   if (!hasSignal(now_ms)) return Screen::NoSignal;
   if (flag_overlay_ && (now_ms - flag_since_ms_) < kFlagOverlayMs) return Screen::RaceFlag;
   if (invalid_overlay_ && (now_ms - invalid_since_ms_) < kInvalidOverlayMs) {
     return Screen::LapInvalidated;
   }
+  if (alert_active) return Screen::Alert;
   if (last_.has(kFlagPitLimiter)) return Screen::PitLimiter;
   if (!last_.has(kFlagEngineOn)) return Screen::EngineOff;
   return page_;

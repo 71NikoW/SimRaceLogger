@@ -3,8 +3,14 @@
 Run from the repo root:  python -m rigdash.vectors > protocol/vectors.txt
 """
 
-from .model import Flag, RaceFlag, Session, Telemetry
-from .protocol import encode_hello, encode_telemetry, encode_track_info
+from .model import (
+    Car, Compound, Config, Corner, Engine, Flag, Fuel, LapHistory, Penalty, PitWindow, Race,
+    RaceBits, RaceFlag, SectorState, Session, Telemetry, Timing, Tyres, Units, Weather,
+)
+from .protocol import (
+    encode_car, encode_config, encode_engine, encode_fuel, encode_hello, encode_lap_history,
+    encode_race, encode_telemetry, encode_timing, encode_track_info, encode_tyres, encode_weather,
+)
 
 # Field values are duplicated in firmware/test/test_vectors.cpp — keep in sync.
 TELEMETRY_BASIC = Telemetry(
@@ -22,6 +28,22 @@ TELEMETRY_PIT = Telemetry(
     race_flag=RaceFlag.YELLOW,
 )
 
+ENGINE = Engine(rpm=7450, shift_rpm=7800, max_rpm=8300)
+TYRES = Tyres([Corner(855, 2750, 97, 480), Corner(862, 2761, 96, 495), Corner(-12, 2700, 99, 20),
+               Corner(810, 2705, 98, 410)], 800, 950, 2750, Compound.MEDIUM)
+CAR = Car(abs=3, tc=4, tc_cut=0xFF, engine_map=1, brake_bias_x10=565, damage_pct=12)
+FUEL = Fuel(liters_x10=425, per_lap_x100=281, capacity_x10=1000, to_finish_x10=-32)
+RACE = Race(gap_ahead_ms=1834, gap_behind_ms=-2510, time_left_s=1234, laps_left=0xFFFF,
+            car_count=24, penalty=Penalty.DRIVE_THROUGH, penalty_s=0, track_limits=2,
+            track_limits_max=4, pit_window=PitWindow.OPEN, bits=RaceBits.LAST_LAP)
+TIMING = Timing(sector=1, sector_ms=[29_512, 0, 0], best_sector_ms=[29_400, 31_002, 27_870],
+                state=[SectorState.SLOWER, SectorState.NONE, SectorState.SESSION_BEST],
+                optimal_lap_ms=88_272, session_best_ms=88_105)
+WEATHER = Weather(rain=2, rain_in_10=3, rain_in_30=4, wetness=1, grip_pct=92, wind_kmh=12,
+                  wind_dir_deg=225, clouds_pct=80)
+HISTORY = LapHistory([(88_201, True), (89_012, False), (87_950, True)])
+CONFIG = Config(page_mask=0b1010_0101, brightness=128, units=Units.MPH | Units.BAR)
+
 
 def vectors() -> list[tuple[str, bytes]]:
     return [
@@ -29,6 +51,15 @@ def vectors() -> list[tuple[str, bytes]]:
         ("telemetry_basic", encode_telemetry(TELEMETRY_BASIC)),
         ("telemetry_pit", encode_telemetry(TELEMETRY_PIT)),
         ("track_info", encode_track_info("Autodromo Enzo e Dino Ferrari")),
+        ("engine", encode_engine(ENGINE)),
+        ("tyres", encode_tyres(TYRES)),
+        ("car", encode_car(CAR)),
+        ("fuel", encode_fuel(FUEL)),
+        ("race", encode_race(RACE)),
+        ("timing", encode_timing(TIMING)),
+        ("weather", encode_weather(WEATHER)),
+        ("lap_history", encode_lap_history(HISTORY)),
+        ("config", encode_config(CONFIG)),
     ]
 
 

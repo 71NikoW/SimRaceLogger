@@ -173,3 +173,42 @@ TEST(parser_survives_random_noise) {
   // Noise may swallow a frame now and then (e.g. a fake SOF+len), never most.
   CHECK(got > 400);
 }
+
+TEST(apply_rejects_short_payloads) {
+  State s;
+  Frame f;
+  const uint8_t types[] = {kMsgTelemetry, kMsgEngine, kMsgTyres, kMsgCar, kMsgFuel, kMsgRace,
+                           kMsgTiming, kMsgWeather, kMsgLapHistory, kMsgConfig};
+  const uint8_t sizes[] = {kTelemetryMinSize, kEngineSize, kTyresSize, kCarSize, kFuelSize, kRaceSize,
+                           kTimingSize, kWeatherSize, kLapHistorySize, kConfigSize};
+  for (size_t i = 0; i < sizeof types; ++i) {
+    f.type = types[i];
+    f.len = static_cast<uint8_t>(sizes[i] - 1);
+    CHECK_EQ(applyFrame(f, s), 0);
+    f.len = sizes[i];
+    CHECK_EQ(applyFrame(f, s), types[i]);
+  }
+  f.type = 0x7E;
+  CHECK_EQ(applyFrame(f, s), 0);
+}
+
+TEST(apply_clamps_out_of_range_values) {
+  State s;
+  Frame f;
+  f.type = kMsgWeather;
+  f.len = kWeatherSize;
+  memset(f.payload, 0xFF, sizeof f.payload);
+  applyFrame(f, s);
+  CHECK_EQ(s.weather.rain, 5);
+  CHECK_EQ(s.weather.grip_pct, 100);
+  CHECK(s.weather.wind_dir_deg < 360);
+  f.type = kMsgLapHistory;
+  f.len = kLapHistorySize;
+  applyFrame(f, s);
+  CHECK_EQ(s.history.count, 5);
+  CHECK_EQ(s.history.valid_mask, 0x1F);
+  f.type = kMsgTrackInfo;
+  f.len = kMaxPayload;
+  applyFrame(f, s);
+  CHECK_EQ(strlen(s.track_name), static_cast<size_t>(kMaxTrackName));
+}

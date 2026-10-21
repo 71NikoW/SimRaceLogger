@@ -57,7 +57,9 @@ Split into a **hardware-independent core** (`lib/core`) and a thin
 |------------------|-------------------------------------------------------------|--------------|
 | `protocol`       | Streaming frame parser, CRC, payload decoding, resync       | yes          |
 | `format`         | Lap time / delta / fuel / gear text formatting              | yes          |
-| `screen_manager` | Which screen is visible (overlays, priorities, timeouts)    | yes          |
+| `screen_manager` | Which screen is visible (overlays, priorities, page mask)   | yes          |
+| `alerts`         | Edge-triggered popups: weather, fuel, damage, penalties, ABS/TC/BB changes | yes |
+| `dash`           | Shift lights, LED colours, delta bar, tyre/brake temp bands | yes          |
 
 The board layer reads USB serial, feeds the parser, asks the screen manager
 what to show and calls the renderer (LovyanGFX or LVGL, decided during the
@@ -65,23 +67,38 @@ prototype). Buttons / the two LEDs on top are handled there as well.
 
 ## Screens
 
-Taken from the reference pictures:
+**Pages** (button cycles through them; the bridge's `--pages` picks which):
 
-| Screen            | Content                                                         | Shown when                        |
-|-------------------|-----------------------------------------------------------------|-----------------------------------|
-| Current lap       | Big running lap time, session type, position, fuel laps, lap no.| default page                      |
-| Track data        | Track name, mini map with car position, fuel %, air/track temp  | page selected by button           |
-| Last lap / delta  | Last lap, best lap, delta to best                                | page selected by button           |
-| Race flag         | Full-screen flag (yellow, blue, black, chequered, SC, VSC …)    | 3 s after the flag changes        |
-| Pit limiter       | Blinking green banner + gear, speed, position, last pit stop, flag | pit limiter active             |
-| Lap invalidated   | Red warning                                                     | 2.5 s after lap becomes invalid   |
-| Engine off        | "ENGINE OFF"                                                    | engine not running                |
-| No signal         | "WAITING FOR TELEMETRY"                                         | no valid frame for > 2 s          |
+| Page         | Content                                                                    |
+|--------------|----------------------------------------------------------------------------|
+| Current lap  | Big running lap time, session, position, fuel laps, lap number             |
+| Delta        | Live delta bar to best lap, sector times coloured purple / green / yellow  |
+| Tyres        | Per wheel: temperature (cold / optimal / hot), pressure, wear, brake temp  |
+| Car          | Fuel (L, per lap, laps left, to finish), ABS, TC, TC cut, map, brake bias, damage |
+| Race         | Gap ahead / behind, time or laps left, penalty, track limits, pit window   |
+| Weather      | Rain now, in 10 and 30 min, track wetness, grip, wind, temperatures        |
+| Track data   | Track name, mini map with car position, fuel %, air / track temperature    |
+| Laps         | Last, best, optimal lap and the last 5 laps (invalid ones marked)          |
 
-Priority (highest first): no signal → race flag → lap invalidated →
-pit limiter → engine off → selected page. While a flag is waved, every
-screen shows a flag-coloured strip and the LEDs take the flag colour. This logic is in `screen_manager` and fully
-unit-tested.
+**Overlays** (automatic, highest priority first):
+
+| Overlay          | Shown when                                                        |
+|------------------|-------------------------------------------------------------------|
+| No signal        | no valid frame for > 2 s                                          |
+| Race flag        | 3 s after the flag changes (yellow, blue, SC, VSC, chequered …)   |
+| Lap invalidated  | 2.5 s after the lap becomes invalid                               |
+| Alert popup      | weather warning, low fuel, fuel short, damage, penalty, track limits, last lap, pit window open (3 s); ABS / TC / map / brake bias changed (1.5 s) |
+| Pit limiter      | limiter on — blinking banner + gear, speed, position, last stop, flag |
+| Engine off       | engine not running                                                |
+
+While a flag is waved every screen shows a flag-coloured strip.
+
+**Weather warnings:** rain expected in 10 min · rain started · rain getting
+heavier · track drying · wet tyres advised (on slicks in medium rain or a
+wet track). Each fires once per change, not every frame.
+
+**LEDs** (two RGB on top): pit limiter blinks green → flag colour blinks →
+shift lights (green, then yellow, red flash at the shift point) → blue idle.
 
 ## Hardware (proposal, to be validated)
 

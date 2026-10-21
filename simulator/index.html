@@ -44,7 +44,7 @@ body {
   line-height: 1.5;
 }
 .wrap {
-  max-width: 1180px;
+  max-width: 1220px;
   margin: 0 auto;
   padding-block: 28px 40px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -62,21 +62,23 @@ h1 {
   margin: 0;
   text-wrap: balance;
 }
-.sub { color: var(--muted); margin: 0; max-width: 68ch; }
+.sub { color: var(--muted); margin: 0; max-width: 72ch; }
 
 .main {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
-@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.left { display: grid; gap: 22px; min-width: 0; }
 
 /* --- Device --- */
 .bench {
   display: grid;
   place-items: center;
-  padding: clamp(18px, 4vw, 44px) clamp(8px, 3vw, 32px);
+  gap: 14px;
+  padding: clamp(18px, 4vw, 40px) clamp(8px, 3vw, 32px);
   border-radius: 14px;
   background:
     radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
@@ -112,11 +114,10 @@ h1 {
   border-radius: 50%;
   background: #0b1a4a;
   box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
-  transition: background .12s, box-shadow .12s;
 }
-.led.on-blue  { background: #4d7bff; box-shadow: 0 0 10px 2px rgba(77,123,255,.8); }
-.led.on-green { background: #7cff5a; box-shadow: 0 0 10px 2px rgba(124,255,90,.8); }
-.led.on-red   { background: #ff3b2f; box-shadow: 0 0 10px 2px rgba(255,59,47,.85); }
+.led.on-blue   { background: #4d7bff; box-shadow: 0 0 10px 2px rgba(77,123,255,.8); }
+.led.on-green  { background: #7cff5a; box-shadow: 0 0 10px 2px rgba(124,255,90,.8); }
+.led.on-red    { background: #ff3b2f; box-shadow: 0 0 10px 2px rgba(255,59,47,.85); }
 .led.on-yellow { background: #ffd60a; box-shadow: 0 0 10px 2px rgba(255,214,10,.85); }
 .led.on-white  { background: #ffffff; box-shadow: 0 0 10px 2px rgba(255,255,255,.8); }
 .bezel {
@@ -126,13 +127,16 @@ h1 {
   box-shadow: inset 0 3px 8px rgba(0,0,0,.8), 0 0 0 3px var(--case-lo);
 }
 canvas { display: block; width: 100%; height: auto; max-width: 100%; border-radius: 4px; }
+.pages { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pages button { padding: 6px 10px; font-size: 13px; }
+.pages button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .device-caption {
-  display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center;
-  margin-top: 16px; color: var(--muted); font-size: 13px;
+  display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center;
+  color: var(--muted); font-size: 13px;
 }
 .device-caption b { color: var(--fg); font-weight: 600; }
 
-/* --- Controls --- */
+/* --- Panels --- */
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -158,12 +162,15 @@ button {
   background: var(--chip);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   cursor: pointer;
 }
 button:hover { border-color: var(--accent); }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.pair { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.pair span { padding: 0 10px; font: 600 13px/1 var(--font-body); color: var(--muted); }
+.pair button { border: 0; border-radius: 0; padding: 9px 11px; }
 .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .toggle span { font-weight: 500; }
 .switch { position: relative; width: 42px; height: 24px; flex: none; }
@@ -180,16 +187,21 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 .switch input:checked + i { background: var(--accent); }
 .switch input:checked + i::after { transform: translateX(18px); }
 .switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chips button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; }
+.chips button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chips i { width: 14px; height: 10px; border-radius: 2px; background: var(--f); outline: 1px solid var(--line); }
+.chips i.cheq { background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 7px 5px; }
 
 .readout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
   gap: 8px 14px;
+  margin: 0;
   font-variant-numeric: tabular-nums;
 }
-.readout div { display: grid; gap: 0; }
+.readout div { display: grid; }
 .readout dt { font-size: 12px; color: var(--muted); }
-.readout dd { margin: 0; font-family: var(--font-mono); font-size: 14px; }
+.readout dd { margin: 0; font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
 .hex {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -199,47 +211,59 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px 12px;
-  overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-all;
   margin: 0;
+  max-height: 180px;
+  overflow: auto;
 }
 .hex b { color: var(--accent); font-weight: 500; }
-.flags button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; }
-.flags button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.flags i { width: 14px; height: 10px; border-radius: 2px; background: var(--f); outline: 1px solid var(--line); }
-.flags i.cheq { background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 7px 5px; }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 
-@media (prefers-reduced-motion: reduce) { .led, .switch i, .switch i::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .switch i, .switch i::after { transition: none; } }
 </style>
 
 <div class="wrap">
   <header>
     <h1>Rig Lap Display Simulator</h1>
-    <p class="sub">The display as it will look on the rig, driven by the demo telemetry. Every frame goes through the same protocol and screen logic as the ESP32 firmware.</p>
+    <p class="sub">The display as it will look on the rig. Demo telemetry goes through the same protocol, warnings and screen logic as the ESP32 firmware. Use the controls to trigger flags, weather, pit stops and setting changes.</p>
   </header>
 
   <div class="main">
-    <section class="bench" aria-label="Display preview">
-      <div class="device">
-        <div class="leds"><span class="led" id="led1"></span><span class="led" id="led2"></span></div>
-        <div class="bezel"><canvas id="screen" width="640" height="288" aria-label="Lap display screen"></canvas></div>
-      </div>
-      <div class="device-caption">
-        <span>Screen: <b id="screenName">—</b></span>
-        <span>Frames: <b id="frameCount">0</b></span>
-        <span>CRC errors: <b id="crcErrors">0</b></span>
-      </div>
-    </section>
+    <div class="left">
+      <section class="bench" aria-label="Display preview">
+        <div class="device">
+          <div class="leds"><span class="led" id="led1"></span><span class="led" id="led2"></span></div>
+          <div class="bezel"><canvas id="screen" width="640" height="288" aria-label="Lap display screen"></canvas></div>
+        </div>
+        <div class="pages" id="pageButtons" aria-label="Pages"></div>
+        <div class="device-caption">
+          <span>Screen: <b id="screenName">—</b></span>
+          <span>Frames: <b id="frameCount">0</b></span>
+          <span>CRC errors: <b id="crcErrors">0</b></span>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Decoded data">
+        <div class="group">
+          <div class="label">Decoded on the display</div>
+          <dl class="readout" id="readout"></dl>
+        </div>
+        <div class="group">
+          <div class="label">Last frames on the wire</div>
+          <pre class="hex" id="hex">—</pre>
+        </div>
+      </section>
+    </div>
 
     <aside class="panel" aria-label="Controls">
       <div class="group">
-        <div class="label">Display button</div>
+        <div class="label">Display buttons</div>
         <div class="row">
+          <button id="btnPrev" type="button">Previous page</button>
           <button class="primary" id="btnPage" type="button">Next page</button>
         </div>
-        <p class="note">Cycles Current lap → Track data → Lap summary, like the hardware button.</p>
+        <label class="toggle" for="tUnits"><span>Imperial units (mph, °F, psi)</span><span class="switch"><input type="checkbox" id="tUnits"><i></i></span></label>
       </div>
 
       <div class="group">
@@ -249,12 +273,20 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
         <div class="row">
           <button id="btnInvalid" type="button">Invalidate lap</button>
           <button id="btnFinish" type="button">Finish lap</button>
+          <button id="btnDamage" type="button">Hit the wall</button>
+          <button id="btnLowFuel" type="button">Low fuel</button>
+        </div>
+        <div class="row">
+          <span class="pair"><span>ABS</span><button type="button" data-set="abs" data-d="-1" aria-label="ABS down">−</button><button type="button" data-set="abs" data-d="1" aria-label="ABS up">+</button></span>
+          <span class="pair"><span>TC</span><button type="button" data-set="tc" data-d="-1" aria-label="TC down">−</button><button type="button" data-set="tc" data-d="1" aria-label="TC up">+</button></span>
+          <span class="pair"><span>BB</span><button type="button" data-set="bb" data-d="-5" aria-label="Brake bias rearward">−</button><button type="button" data-set="bb" data-d="5" aria-label="Brake bias forward">+</button></span>
+          <span class="pair"><span>MAP</span><button type="button" data-set="map" data-d="-1" aria-label="Engine map down">−</button><button type="button" data-set="map" data-d="1" aria-label="Engine map up">+</button></span>
         </div>
       </div>
 
       <div class="group">
         <div class="label">Race control</div>
-        <div class="row flags" id="flagButtons" role="radiogroup" aria-label="Race flag">
+        <div class="row chips" id="flagButtons" aria-label="Race flag">
           <button type="button" data-flag="1" aria-pressed="true"><i style="--f:#22c55e"></i>Green</button>
           <button type="button" data-flag="2" aria-pressed="false"><i style="--f:#ffd60a"></i>Yellow</button>
           <button type="button" data-flag="3" aria-pressed="false"><i style="--f:#2f7bff"></i>Blue</button>
@@ -265,6 +297,24 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
           <button type="button" data-flag="8" aria-pressed="false"><i style="--f:#ffd60a"></i>Safety car</button>
           <button type="button" data-flag="9" aria-pressed="false"><i style="--f:#ffd60a"></i>VSC / FCY</button>
         </div>
+        <div class="row">
+          <button id="btnPenalty" type="button">Drive-through</button>
+          <button id="btnLimits" type="button">Track limits +1</button>
+          <button id="btnLastLap" type="button">Last lap</button>
+          <button id="btnPitWindow" type="button">Open pit window</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label">Weather</div>
+        <div class="row chips" id="weatherButtons" aria-label="Weather">
+          <button type="button" data-w="dry" aria-pressed="true">Dry</button>
+          <button type="button" data-w="soon" aria-pressed="false">Rain in 10 min</button>
+          <button type="button" data-w="light" aria-pressed="false">Light rain</button>
+          <button type="button" data-w="heavy" aria-pressed="false">Heavy rain</button>
+          <button type="button" data-w="drying" aria-pressed="false">Drying</button>
+        </div>
+        <p class="note">Each change raises the matching warning once. Heavy rain on slicks also advises wet tyres.</p>
       </div>
 
       <div class="group">
@@ -272,27 +322,19 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
         <label class="toggle" for="tUsb"><span>Bridge connected</span><span class="switch"><input type="checkbox" id="tUsb" checked><i></i></span></label>
         <label class="toggle" for="tNoise"><span>Line noise</span><span class="switch"><input type="checkbox" id="tNoise"><i></i></span></label>
       </div>
-
-      <div class="group">
-        <div class="label">Decoded telemetry</div>
-        <dl class="readout" id="readout"></dl>
-      </div>
-
-      <div class="group">
-        <div class="label">Last frame on the wire</div>
-        <pre class="hex" id="hex">—</pre>
-      </div>
     </aside>
   </div>
 </div>
 
 <script>
-// ---------------------------------------------------------------------------
-// Protocol v1 (mirror of bridge/src/rigdash/protocol.py and firmware core)
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// Protocol (mirror of bridge/src/rigdash/protocol.py and firmware core)
+// ===========================================================================
 const SOF = 0xA5, MAX_PAYLOAD = 64;
-const MSG_HELLO = 0x01, MSG_TELEMETRY = 0x10, MSG_TRACK_INFO = 0x11;
+const MSG = { HELLO: 0x01, TELEMETRY: 0x10, TRACK: 0x11, ENGINE: 0x12, TYRES: 0x13, CAR: 0x14,
+  FUEL: 0x15, RACE: 0x16, TIMING: 0x17, WEATHER: 0x18, HISTORY: 0x19, CONFIG: 0x20 };
 const F_PIT = 1, F_INPIT = 2, F_INVALID = 4, F_ENGINE = 8, F_IGN = 16;
+const NA = 0xFF, GAP_UNKNOWN = 0x7FFFFFFF;
 const FLAGS = ["", "GREEN", "YELLOW", "BLUE", "WHITE", "BLACK", "CHEQUERED", "RED", "SAFETY CAR", "VSC"];
 const FLAG_TITLES = ["", "GREEN FLAG", "YELLOW FLAG", "BLUE FLAG", "WHITE FLAG", "BLACK FLAG", "CHEQUERED FLAG", "RED FLAG", "SAFETY CAR", "VIRTUAL SAFETY CAR"];
 
@@ -305,49 +347,69 @@ function crc16(bytes) {
   return crc;
 }
 function encodeFrame(type, payload) {
-  const body = new Uint8Array(2 + payload.length);
-  body[0] = type; body[1] = payload.length; body.set(payload, 2);
-  const crc = crc16(body);
-  const f = new Uint8Array(3 + payload.length + 2);
-  f[0] = SOF; f.set(body, 1);
+  const f = new Uint8Array(5 + payload.length);
+  f[0] = SOF; f[1] = type; f[2] = payload.length; f.set(payload, 3);
+  const crc = crc16(f.subarray(1, 3 + payload.length));
   f[f.length - 2] = crc & 0xFF; f[f.length - 1] = crc >> 8;
   return f;
 }
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.trunc(v)));
-function encodeTelemetry(t) {
-  const p = new Uint8Array(38), d = new DataView(p.buffer);
-  d.setUint32(0, clamp(t.current_lap_ms, 0, 0xFFFFFFFF), true);
-  d.setUint32(4, clamp(t.last_lap_ms, 0, 0xFFFFFFFF), true);
-  d.setUint32(8, clamp(t.best_lap_ms, 0, 0xFFFFFFFF), true);
-  d.setUint32(12, clamp(t.last_pit_ms, 0, 0xFFFFFFFF), true);
-  d.setInt32(16, clamp(t.delta_ms, -0x80000000, 0x7FFFFFFF), true);
-  d.setUint16(20, clamp(t.lap_number, 0, 0xFFFF), true);
-  d.setUint8(22, clamp(t.position, 0, 255));
-  d.setInt8(23, clamp(t.gear, -1, 127));
-  d.setUint16(24, clamp(t.speed_kmh, 0, 0xFFFF), true);
-  d.setUint16(26, clamp(t.fuel_laps_x10, 0, 0xFFFF), true);
-  d.setUint16(28, clamp(t.track_pos, 0, 10000), true);
-  d.setInt16(30, clamp(t.air_temp_x10, -0x8000, 0x7FFF), true);
-  d.setInt16(32, clamp(t.track_temp_x10, -0x8000, 0x7FFF), true);
-  d.setUint16(34, t.flags & 0xFFFF, true);
-  d.setUint8(36, t.session & 0xFF);
-  d.setUint8(37, t.race_flag & 0xFF);
-  return encodeFrame(MSG_TELEMETRY, p);
+// Tiny struct packer with Python struct letters (little-endian): B b H h I i, "3I" repeats.
+const SIZES = { B: 1, b: 1, H: 2, h: 2, I: 4, i: 4 };
+const RANGES = { B: [0, 255], b: [-128, 127], H: [0, 65535], h: [-32768, 32767], I: [0, 4294967295], i: [-2147483648, 2147483647] };
+function expand(fmt) { return fmt.replace(/(\d+)([BbHhIi])/g, (_, n, c) => c.repeat(+n)); }
+function pack(fmt, values) {
+  const f = expand(fmt), size = [...f].reduce((s, c) => s + SIZES[c], 0);
+  const p = new Uint8Array(size), d = new DataView(p.buffer);
+  let o = 0;
+  [...f].forEach((c, i) => {
+    const [lo, hi] = RANGES[c], v = Math.max(lo, Math.min(hi, Math.trunc(values[i] || 0)));
+    ({ B: () => d.setUint8(o, v), b: () => d.setInt8(o, v), H: () => d.setUint16(o, v, true),
+       h: () => d.setInt16(o, v, true), I: () => d.setUint32(o, v, true), i: () => d.setInt32(o, v, true) })[c]();
+    o += SIZES[c];
+  });
+  return p;
 }
-function decodeTelemetry(p) {
-  if (p.length < 37) return null;
-  const d = new DataView(p.buffer, p.byteOffset, p.length);
-  const s = d.getUint8(36), rf = p.length > 37 ? d.getUint8(37) : 0;
-  return {
-    current_lap_ms: d.getUint32(0, true), last_lap_ms: d.getUint32(4, true),
-    best_lap_ms: d.getUint32(8, true), last_pit_ms: d.getUint32(12, true),
-    delta_ms: d.getInt32(16, true), lap_number: d.getUint16(20, true),
-    position: d.getUint8(22), gear: d.getInt8(23), speed_kmh: d.getUint16(24, true),
-    fuel_laps_x10: d.getUint16(26, true), track_pos: d.getUint16(28, true),
-    air_temp_x10: d.getInt16(30, true), track_temp_x10: d.getInt16(32, true),
-    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0, race_flag: rf <= 9 ? rf : 0,
-  };
+function unpack(fmt, p, off = 0) {
+  const d = new DataView(p.buffer, p.byteOffset, p.length), out = [];
+  let o = off;
+  for (const c of expand(fmt)) {
+    out.push(({ B: () => d.getUint8(o), b: () => d.getInt8(o), H: () => d.getUint16(o, true),
+      h: () => d.getInt16(o, true), I: () => d.getUint32(o, true), i: () => d.getInt32(o, true) })[c]());
+    o += SIZES[c];
+  }
+  return out;
 }
+const FMT = { TELEMETRY: "IIIIiHBbHHHhhHBB", ENGINE: "HHH", CORNER: "hHBh", TYRES_TAIL: "hhHB", CAR: "BBBBHB",
+  FUEL: "HHHh", RACE: "iiIHBBBBBBB", TIMING: "B3I3I3BII", WEATHER: "BBBBBBHB", HISTORY: "B5IB", CONFIG: "HBB" };
+
+const enc = {
+  telemetry: t => encodeFrame(MSG.TELEMETRY, pack(FMT.TELEMETRY, [t.current_lap_ms, t.last_lap_ms, t.best_lap_ms,
+    t.last_pit_ms, t.delta_ms, t.lap_number, t.position, t.gear, t.speed_kmh, t.fuel_laps_x10,
+    Math.min(10000, t.track_pos), t.air_temp_x10, t.track_temp_x10, t.flags, t.session, t.race_flag])),
+  engine: e => encodeFrame(MSG.ENGINE, pack(FMT.ENGINE, [e.rpm, e.shift_rpm, e.max_rpm])),
+  tyres: t => {
+    const parts = t.wheels.map(w => pack(FMT.CORNER, [w.temp_x10, w.psi_x100, w.wear, w.brake_c]));
+    parts.push(pack(FMT.TYRES_TAIL, [t.opt_min_x10, t.opt_max_x10, t.target_psi_x100, t.compound]));
+    const p = new Uint8Array(35); let o = 0; for (const x of parts) { p.set(x, o); o += x.length; }
+    return encodeFrame(MSG.TYRES, p);
+  },
+  car: c => encodeFrame(MSG.CAR, pack(FMT.CAR, [c.abs, c.tc, c.tc_cut, c.map, c.bb_x10, c.damage])),
+  fuel: f => encodeFrame(MSG.FUEL, pack(FMT.FUEL, [f.liters_x10, f.per_lap_x100, f.capacity_x10, f.to_finish_x10])),
+  race: r => encodeFrame(MSG.RACE, pack(FMT.RACE, [r.gap_ahead_ms, r.gap_behind_ms, r.time_left_s, r.laps_left,
+    r.car_count, r.penalty, r.penalty_s, r.track_limits, r.track_limits_max, r.pit_window, r.bits])),
+  timing: t => encodeFrame(MSG.TIMING, pack(FMT.TIMING, [t.sector, ...t.sector_ms, ...t.best_sector_ms, ...t.state,
+    t.optimal_lap_ms, t.session_best_ms])),
+  weather: w => encodeFrame(MSG.WEATHER, pack(FMT.WEATHER, [w.rain, w.rain_in_10, w.rain_in_30, w.wetness,
+    w.grip_pct, w.wind_kmh, w.wind_dir_deg, w.clouds_pct])),
+  history: h => {
+    const laps = h.slice(0, 5), times = laps.map(l => l[0]);
+    while (times.length < 5) times.push(0);
+    return encodeFrame(MSG.HISTORY, pack(FMT.HISTORY, [laps.length, ...times,
+      laps.reduce((m, l, i) => m | (l[1] ? 1 << i : 0), 0)]));
+  },
+  config: c => encodeFrame(MSG.CONFIG, pack(FMT.CONFIG, [c.page_mask, c.brightness, c.units])),
+};
+
 class FrameParser {
   constructor() { this.buf = []; this.crcErrors = 0; }
   push(b) { if (this.buf.length === 0 && b !== SOF) return; this.buf.push(b); }
@@ -371,14 +433,76 @@ class FrameParser {
   drop() { let i = 1; while (i < this.buf.length && this.buf[i] !== SOF) i++; this.buf.splice(0, i); }
 }
 
-// ---------------------------------------------------------------------------
-// Screen manager (mirror of firmware/lib/core/src/screen_manager.cpp)
-// ---------------------------------------------------------------------------
+// Decoded state on the "display" side (mirror of applyFrame in protocol.cpp).
+const lvl = v => Math.min(5, v);
+function applyFrame(f, S) {
+  const p = f.payload, L = p.length;
+  switch (f.type) {
+    case MSG.TELEMETRY: {
+      if (L < 37) return 0;
+      const v = unpack("IIIIiHBbHHHhhHB", p);
+      S.t = { current_lap_ms: v[0], last_lap_ms: v[1], best_lap_ms: v[2], last_pit_ms: v[3], delta_ms: v[4],
+        lap_number: v[5], position: v[6], gear: v[7], speed_kmh: v[8], fuel_laps_x10: v[9], track_pos: v[10],
+        air_temp_x10: v[11], track_temp_x10: v[12], flags: v[13] & 0x1F, session: v[14] <= 4 ? v[14] : 0,
+        race_flag: L > 37 && p[37] <= 9 ? p[37] : 0 };
+      return f.type;
+    }
+    case MSG.ENGINE: { if (L < 6) return 0; const [rpm, shift_rpm, max_rpm] = unpack(FMT.ENGINE, p); S.engine = { rpm, shift_rpm, max_rpm }; return f.type; }
+    case MSG.TYRES: {
+      if (L < 35) return 0;
+      const wheels = [0, 1, 2, 3].map(i => { const [temp_x10, psi_x100, wear, brake_c] = unpack(FMT.CORNER, p, i * 7); return { temp_x10, psi_x100, wear: Math.min(100, wear), brake_c }; });
+      const [opt_min_x10, opt_max_x10, target_psi_x100, compound] = unpack(FMT.TYRES_TAIL, p, 28);
+      S.tyres = { wheels, opt_min_x10, opt_max_x10, target_psi_x100, compound: compound <= 5 ? compound : 0 };
+      return f.type;
+    }
+    case MSG.CAR: { if (L < 7) return 0; const [abs, tc, tc_cut, map, bb_x10, damage] = unpack(FMT.CAR, p); S.car = { abs, tc, tc_cut, map, bb_x10, damage: Math.min(100, damage) }; return f.type; }
+    case MSG.FUEL: { if (L < 8) return 0; const [liters_x10, per_lap_x100, capacity_x10, to_finish_x10] = unpack(FMT.FUEL, p); S.fuel = { liters_x10, per_lap_x100, capacity_x10, to_finish_x10 }; return f.type; }
+    case MSG.RACE: {
+      if (L < 21) return 0;
+      const v = unpack(FMT.RACE, p);
+      S.race = { gap_ahead_ms: v[0], gap_behind_ms: v[1], time_left_s: v[2], laps_left: v[3], car_count: v[4],
+        penalty: v[5] <= 4 ? v[5] : 0, penalty_s: v[6], track_limits: v[7], track_limits_max: v[8],
+        pit_window: v[9] <= 2 ? v[9] : 0, bits: v[10] & 3 };
+      return f.type;
+    }
+    case MSG.TIMING: {
+      if (L < 36) return 0;
+      const v = unpack(FMT.TIMING, p);
+      S.timing = { sector: v[0] > 2 ? 0 : v[0], sector_ms: v.slice(1, 4), best_sector_ms: v.slice(4, 7),
+        state: v.slice(7, 10).map(x => x <= 3 ? x : 0), optimal_lap_ms: v[10], session_best_ms: v[11] };
+      return f.type;
+    }
+    case MSG.WEATHER: {
+      if (L < 9) return 0;
+      const v = unpack(FMT.WEATHER, p);
+      S.weather = { rain: lvl(v[0]), rain_in_10: lvl(v[1]), rain_in_30: lvl(v[2]), wetness: lvl(v[3]),
+        grip_pct: Math.min(100, v[4]), wind_kmh: v[5], wind_dir_deg: v[6] % 360, clouds_pct: Math.min(100, v[7]) };
+      return f.type;
+    }
+    case MSG.HISTORY: {
+      if (L < 22) return 0;
+      const v = unpack(FMT.HISTORY, p), n = Math.min(5, v[0]);
+      S.history = Array.from({ length: n }, (_, i) => [v[1 + i], !!((v[6] >> i) & 1)]);
+      return f.type;
+    }
+    case MSG.CONFIG: { if (L < 4) return 0; const [page_mask, brightness, units] = unpack(FMT.CONFIG, p); S.config = { page_mask, brightness, units: units & 7 }; return f.type; }
+    case MSG.TRACK: S.track = new TextDecoder().decode(p.slice(0, 48)); return f.type;
+    case MSG.HELLO: return L >= 1 ? f.type : 0;
+  }
+  return 0;
+}
+
+// ===========================================================================
+// Screen manager, alerts, LEDs (mirror of firmware/lib/core)
+// ===========================================================================
 const SIGNAL_TIMEOUT = 2000, INVALID_OVERLAY = 2500, FLAG_OVERLAY = 3000, BLINK_PERIOD = 500;
-const blinkOn = now => (now % BLINK_PERIOD) < BLINK_PERIOD / 2;
-const PAGES = ["CurrentLap", "TrackData", "LapSummary"];
+const blinkOn = (now, period = BLINK_PERIOD) => (now % period) < period / 2;
+const PAGES = ["CurrentLap", "Delta", "Tyres", "Car", "Race", "Weather", "TrackData", "Laps"];
+const PAGE_LABEL = { CurrentLap: "Current lap", Delta: "Delta", Tyres: "Tyres", Car: "Car", Race: "Race",
+  Weather: "Weather", TrackData: "Track data", Laps: "Laps" };
+
 class ScreenManager {
-  constructor() { this.page = 0; this.last = null; this.rx = 0; this.invalidSince = -1e9; this.flagSince = -1e9; }
+  constructor() { this.page = 0; this.mask = 0xFF; this.last = null; this.rx = 0; this.invalidSince = -1e9; this.flagSince = -1e9; }
   onTelemetry(t, now) {
     const wasInvalid = this.last && (this.last.flags & F_INVALID);
     const newLap = this.last && t.lap_number !== this.last.lap_number;
@@ -386,20 +510,121 @@ class ScreenManager {
     if (this.last && t.race_flag !== this.last.race_flag && t.race_flag) this.flagSince = now;
     this.last = t; this.rx = now;
   }
-  nextPage() { this.page = (this.page + 1) % PAGES.length; }
-  current(now) {
+  setPageMask(m) { this.mask = (m & 0xFF) || 1; if (!((this.mask >> this.page) & 1)) this.step(1); }
+  step(dir) {
+    let i = this.page;
+    for (let n = 0; n < 8; n++) { i = (i + 8 + dir) % 8; if ((this.mask >> i) & 1) { this.page = i; return; } }
+  }
+  current(now, alertActive) {
     if (!this.last || now - this.rx > SIGNAL_TIMEOUT) return "NoSignal";
     if (now - this.flagSince < FLAG_OVERLAY) return "RaceFlag";
     if (now - this.invalidSince < INVALID_OVERLAY) return "LapInvalidated";
+    if (alertActive) return "Alert";
     if (this.last.flags & F_PIT) return "PitLimiter";
     if (!(this.last.flags & F_ENGINE)) return "EngineOff";
     return PAGES[this.page];
   }
 }
 
-// ---------------------------------------------------------------------------
+const ALERT_MS = 3000, SETTING_ALERT_MS = 1500, LOW_FUEL_X10 = 20;
+const SETTING_KINDS = new Set(["Abs", "Tc", "TcCut", "EngineMap", "BrakeBias"]);
+const alertMs = k => SETTING_KINDS.has(k) ? SETTING_ALERT_MS : ALERT_MS;
+const DRY = c => c >= 1 && c <= 3;
+class AlertEngine {
+  constructor() { this.q = []; this.seen = false; this.prev = null; this.lowFuel = false; this.short = false; this.rainSoon = false; this.wetTyres = false; }
+  raise(kind, value = 0, extra = 0, now) {
+    const i = this.q.findIndex(a => a.kind === kind);
+    if (i >= 0) { Object.assign(this.q[i], { value, extra }); if (i === 0) this.q[0].since = now; return; }
+    if (this.q.length === 6) this.q.splice(1, 1);
+    this.q.push({ kind, value, extra, since: now });
+  }
+  expire(now) {
+    while (this.q.length && now - this.q[0].since >= alertMs(this.q[0].kind)) {
+      this.q.shift(); if (this.q.length) this.q[0].since = now;
+    }
+  }
+  update(S, now) {
+    this.expire(now);
+    if (!S.t) return;
+    const p = this.prev;
+    if (!this.seen) this.lowFuel = S.t.fuel_laps_x10 < LOW_FUEL_X10;
+    if (S.weather && (!this.seen || !p.weather)) {
+      const w = S.weather;
+      this.rainSoon = w.rain < 2 && w.rain_in_10 >= 2;
+      this.wetTyres = (w.rain >= 3 || w.wetness >= 3) && S.tyres && DRY(S.tyres.compound);
+    }
+    if (S.fuel && (!this.seen || !p.fuel)) this.short = S.fuel.to_finish_x10 > 0 && S.fuel.to_finish_x10 !== 0x7FFF;
+    const snap = JSON.parse(JSON.stringify(S));
+    if (!this.seen) { this.prev = snap; this.seen = true; return; }
+
+    if (S.weather && p.weather) {
+      const w = S.weather, pw = p.weather;
+      if (w.rain < 2 && w.rain_in_10 >= 2) { if (!this.rainSoon) this.raise("RainSoon", w.rain_in_10, 0, now); this.rainSoon = true; }
+      else if (w.rain_in_10 < 2) this.rainSoon = false;
+      if (w.rain >= 2 && pw.rain < 2) this.raise("RainStarted", w.rain, 0, now);
+      else if (w.rain > pw.rain && pw.rain >= 2) this.raise("RainIncreasing", w.rain, 0, now);
+      if (w.rain === 0 && w.wetness < pw.wetness) this.raise("TrackDrying", w.wetness, 0, now);
+      const wet = w.rain >= 3 || w.wetness >= 3;
+      if (wet && S.tyres && DRY(S.tyres.compound)) { if (!this.wetTyres) this.raise("WetTyresAdvised", w.rain, 0, now); this.wetTyres = true; }
+      else this.wetTyres = false;
+    }
+    const fl = S.t.fuel_laps_x10;
+    if (fl !== 0xFFFF && fl < LOW_FUEL_X10 && !(S.t.flags & F_INPIT)) { if (!this.lowFuel) this.raise("LowFuel", fl, 0, now); this.lowFuel = true; }
+    else if (fl === 0xFFFF || fl >= LOW_FUEL_X10 + 5) this.lowFuel = false;
+    if (S.fuel && p.fuel && S.fuel.to_finish_x10 !== 0x7FFF) {
+      if (S.fuel.to_finish_x10 > 0) { if (!this.short) this.raise("FuelShort", S.fuel.to_finish_x10, 0, now); this.short = true; }
+      else this.short = false;
+    }
+    if (S.car && p.car) {
+      const c = S.car, pc = p.car;
+      if (c.damage >= pc.damage + 5) this.raise("Damage", c.damage, 0, now);
+      if (c.abs !== pc.abs && c.abs !== NA) this.raise("Abs", c.abs, 0, now);
+      if (c.tc !== pc.tc && c.tc !== NA) this.raise("Tc", c.tc, 0, now);
+      if (c.tc_cut !== pc.tc_cut && c.tc_cut !== NA) this.raise("TcCut", c.tc_cut, 0, now);
+      if (c.map !== pc.map && c.map !== NA) this.raise("EngineMap", c.map, 0, now);
+      if (c.bb_x10 !== pc.bb_x10 && c.bb_x10 && pc.bb_x10) this.raise("BrakeBias", c.bb_x10, 0, now);
+    }
+    if (S.race && p.race) {
+      const r = S.race, pr = p.race;
+      if (r.penalty && r.penalty !== pr.penalty) this.raise("Penalty", r.penalty, r.penalty_s, now);
+      if (r.track_limits > pr.track_limits) this.raise("TrackLimits", r.track_limits, r.track_limits_max, now);
+      if ((r.bits & 2) && !(pr.bits & 2)) this.raise("LastLap", 0, 0, now);
+      if (r.pit_window === 2 && pr.pit_window !== 2) this.raise("PitWindowOpen", 0, 0, now);
+    }
+    this.prev = snap;
+  }
+  current(now) {
+    if (!this.q.length) return null;
+    const a = this.q[0];
+    return now - a.since < alertMs(a.kind) ? a : (this.q[1] || null);
+  }
+}
+
+function shiftLedsLit(e, n) {
+  if (!e || !e.shift_rpm || !n) return 0;
+  const start = Math.floor(e.shift_rpm * 9 / 10);
+  if (e.rpm <= start) return 0;
+  if (e.rpm >= e.shift_rpm) return n;
+  return Math.min(n, Math.floor((e.rpm - start) * n / (e.shift_rpm - start)) + 1);
+}
+const FLAG_LED = { 2: "yellow", 8: "yellow", 9: "yellow", 3: "blue", 5: "red", 7: "red", 4: "white", 6: "white" };
+function ledsFor(screen, S, now) {
+  if (screen === "NoSignal" || !S.t) return ["", ""];
+  const b = blinkOn(now);
+  if (S.t.flags & F_PIT) return b ? ["green", "green"] : ["", ""];
+  const f = FLAG_LED[S.t.race_flag];
+  if (f) return b ? [f, f] : ["", ""];
+  if (S.engine && S.engine.shift_rpm) {
+    if (S.engine.rpm >= S.engine.shift_rpm) return blinkOn(now, 120) ? ["red", "red"] : ["", ""];
+    const lit = shiftLedsLit(S.engine, 2);
+    if (lit) return [lit >= 1 ? "green" : "", lit >= 2 ? "yellow" : ""];
+  }
+  return screen === "EngineOff" ? ["", ""] : ["blue", "blue"];
+}
+
+// ===========================================================================
 // Formatting (mirror of firmware/lib/core/src/format.cpp)
-// ---------------------------------------------------------------------------
+// ===========================================================================
 const pad = (n, w) => String(n).padStart(w, "0");
 function fmtLap(ms, dec = 1) {
   if (!ms) return ["-:--.-", "-:--.--", "-:--.---"][dec - 1];
@@ -410,56 +635,148 @@ function fmtDelta(ms) {
   const v = Math.max(-99990, Math.min(99990, ms)), a = Math.abs(v);
   return `${v < 0 ? "-" : "+"}${Math.floor(a / 1000)}.${pad(Math.floor((a % 1000) / 10), 2)}`;
 }
+function fmtGap(ms) {
+  if (ms === GAP_UNKNOWN) return "--.-";
+  const v = Math.max(-999900, Math.min(999900, ms)), a = Math.abs(v);
+  return `${v < 0 ? "-" : "+"}${Math.floor(a / 1000)}.${Math.floor((a % 1000) / 100)}`;
+}
 const fmtFuel = x => x === 0xFFFF ? "--.- LAPS" : `${Math.floor(x / 10)}.${x % 10} LAPS`;
 const fmtGear = g => g < 0 ? "R" : g === 0 ? "N" : String(g);
-const fmtTemp = x => `${x < 0 ? "-" : ""}${Math.floor(Math.abs(x) / 10)}.${Math.abs(x) % 10}`;
+function fmtTemp(x, f) {
+  let v = x;
+  if (f) { const t = v * 9; v = (t >= 0 ? Math.trunc((t + 2) / 5) : Math.trunc((t - 2) / 5)) + 320; }
+  return `${v < 0 ? "-" : ""}${Math.floor(Math.abs(v) / 10)}.${Math.abs(v) % 10}`;
+}
+const fmtSpeed = (k, mph) => String(mph ? Math.floor((k * 1000 + 804) / 1609) : k);
+function fmtPressure(psi_x100, bar) {
+  if (bar) { const b = Math.floor((Math.floor(psi_x100 * 689476 / 1000000) + 5) / 10); return `${Math.floor(b / 100)}.${pad(b % 100, 2)}`; }
+  const d = Math.floor((psi_x100 + 5) / 10); return `${Math.floor(d / 10)}.${d % 10}`;
+}
+function fmtDuration(s) {
+  if (s === 0xFFFFFFFF) return "--:--";
+  return s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60, 2)}:${pad(s % 60, 2)}` : `${Math.floor(s / 60)}:${pad(s % 60, 2)}`;
+}
+const fmtLiters = x => `${Math.floor(x / 10)}.${x % 10} L`;
+const fmtBias = x => x ? `${Math.floor(x / 10)}.${x % 10}%` : "--.-%";
+const fmtSetting = v => v === NA ? "-" : String(v);
+const RAIN = ["DRY", "DRIZZLE", "LIGHT RAIN", "MEDIUM RAIN", "HEAVY RAIN", "STORM"];
+const PENALTY = ["", "DRIVE THROUGH", "STOP & GO", "TIME PENALTY", "DISQUALIFIED"];
+const COMPOUND = ["", "SOFT", "MEDIUM", "HARD", "INTER", "WET"];
 const SESSIONS = ["", "PRACTICE", "QUALIFYING", "RACE", "HOTLAP"];
 
-// ---------------------------------------------------------------------------
-// Demo telemetry source (mirror of bridge/src/rigdash/sources/demo.py)
-// ---------------------------------------------------------------------------
-const TRACK = "Demo Ring";
-const FUEL_START = 12.0;
+// ===========================================================================
+// Demo source + bridge-side derived values (mirror of bridge/src/rigdash)
+// ===========================================================================
+const TRACK = "Demo Ring", TANK = 100, PER_LAP = 2.8, RACE_S = 30 * 60;
+const WEATHER = {
+  dry:    { rain: 0, rain_in_10: 0, rain_in_30: 0, wetness: 0 },
+  soon:   { rain: 0, rain_in_10: 2, rain_in_30: 3, wetness: 0 },
+  light:  { rain: 2, rain_in_10: 2, rain_in_30: 3, wetness: 1 },
+  heavy:  { rain: 4, rain_in_10: 4, rain_in_30: 3, wetness: 3 },
+  drying: { rain: 0, rain_in_10: 0, rain_in_30: 0, wetness: 2 },
+};
+const ui = { pit: false, engine: true, usb: true, noise: false, flag: 1, imperial: false, weather: "dry" };
+
+class SectorTracker {  // simplified port of rigdash.derived.SectorTracker
+  constructor() { this.lap = null; this.sector = 0; this.start = 0; this.times = [0, 0, 0]; this.states = [0, 0, 0]; this.valid = true; this.best = [0, 0, 0]; this.sb = [0, 0, 0]; this.sbLap = 0; }
+  secOf(f) { return f < 1 / 3 ? 0 : f < 2 / 3 ? 1 : 2; }
+  close(s, ms) {
+    this.times[s] = ms;
+    if (!this.valid) { this.states[s] = 1; return; }
+    const sb = this.sb[s], pb = this.best[s];
+    if (!sb || ms <= sb) { this.sb[s] = ms; this.states[s] = 3; }
+    else if (!pb || ms < pb) this.states[s] = 2;
+    else this.states[s] = 1;
+    if (!pb || ms < pb) this.best[s] = ms;
+  }
+  update(t) {
+    const frac = t.track_pos / 10000, invalid = !!(t.flags & F_INVALID);
+    if (this.lap === null) { this.lap = t.lap_number; this.sector = this.secOf(frac); this.start = t.current_lap_ms; this.valid = false; return; }
+    if (t.lap_number !== this.lap) {
+      if (this.sector === 2 && t.last_lap_ms) {
+        this.close(2, t.last_lap_ms - this.start);
+        if (this.valid && (!this.sbLap || t.last_lap_ms < this.sbLap)) this.sbLap = t.last_lap_ms;
+      }
+      this.lap = t.lap_number; this.sector = 0; this.start = 0; this.times = [0, 0, 0]; this.valid = !invalid; this.states[0] = 0;
+      return;
+    }
+    if (invalid) this.valid = false;
+    const s = this.secOf(frac);
+    if (s > this.sector) {
+      this.close(this.sector, t.current_lap_ms - this.start);
+      this.sector = s; this.start = t.current_lap_ms;
+      if (s === 1) { this.states[1] = 0; this.states[2] = 0; }
+    }
+  }
+  timing() {
+    return { sector: this.sector, sector_ms: [...this.times], best_sector_ms: [...this.best], state: [...this.states],
+      optimal_lap_ms: this.best.every(Boolean) ? this.best.reduce((a, b) => a + b, 0) : 0, session_best_ms: this.sbLap };
+  }
+}
+
 const demo = {
-  lapStart: 0, target: 88200, lap: 1, last: 0, best: 0, invalid: false,
-  fuel: FUEL_START, lastPit: 0, pitEnter: null,
-  newLap(now) {
-    this.lapStart = now;
-    this.target = 88200 + Math.round((Math.random() - 0.5) * 3000);
-    this.invalid = false;
-  },
+  t0: 0, lapStart: 0, target: 88200, lap: 1, last: 0, best: 0, invalid: false, fuel: 34, lastPit: 0, pitEnter: null,
+  lastT: 0, history: [], sectors: new SectorTracker(), timeLeft: RACE_S,
+  car: { abs: 3, tc: 4, tc_cut: 2, map: 1, bb_x10: 565, damage: 0 },
+  race: { penalty: 0, penalty_s: 0, track_limits: 0, bits: 0, pit_window: 1 },
+  newLap(now) { this.lapStart = now; this.target = 88200 + Math.round((Math.random() - 0.5) * 3000); this.invalid = false; },
   finish(now) {
     this.last = now - this.lapStart;
+    this.history.unshift([this.last, !this.invalid]); this.history = this.history.slice(0, 5);
     if (!this.invalid && (!this.best || this.last < this.best)) this.best = this.last;
     this.lap++;
-    this.fuel = Math.max(0, this.fuel - 1);
     this.newLap(now);
   },
-  poll(now, ui) {
+  poll(now) {
     if (now - this.lapStart >= this.target) this.finish(this.lapStart + this.target);
     if (ui.pit && this.pitEnter === null) this.pitEnter = now;
     if (!ui.pit && this.pitEnter !== null) { this.lastPit = now - this.pitEnter; this.pitEnter = null; }
+    const dt = (now - this.lastT) / 1000; this.lastT = now;
+    const moving = ui.engine && !ui.pit;
+    if (moving) this.fuel = Math.max(0, this.fuel - PER_LAP * dt * 1000 / this.target);
+    if (ui.pit && ui.engine) this.fuel = Math.min(TANK, this.fuel + dt * 2.5);  // refuelling in the pit lane
+    this.timeLeft = Math.max(0, RACE_S - (now - this.t0) / 1000);
+
     const cur = now - this.lapStart, fr = cur / this.target;
     let flags = F_IGN;
     if (ui.engine) flags |= F_ENGINE;
     if (ui.pit) flags |= F_PIT | F_INPIT;
     if (this.invalid) flags |= F_INVALID;
-    const moving = ui.engine && !ui.pit;
-    return {
+    const sub = (fr * 50) % 1, gear = !ui.engine ? 0 : ui.pit ? 2 : 1 + Math.floor(fr * 50) % 6;
+    const W = WEATHER[ui.weather];
+    const t = {
       current_lap_ms: cur, last_lap_ms: this.last, best_lap_ms: this.best, last_pit_ms: this.lastPit,
-      delta_ms: this.best ? Math.round(cur - fr * this.best) : 0, lap_number: this.lap, position: 1,
-      gear: !ui.engine ? 0 : ui.pit ? 2 : 1 + Math.floor(fr * 50) % 6,
-      speed_kmh: !ui.engine ? 0 : ui.pit ? 60 : 120 + Math.floor(Math.abs(Math.sin(fr * 18)) * 140),
-      fuel_laps_x10: Math.round(this.fuel * 10), track_pos: Math.floor(fr * 10000),
-      air_temp_x10: 261, track_temp_x10: 372, flags, session: 1, race_flag: ui.flag,
-      _moving: moving,
+      delta_ms: this.best ? Math.round(cur - fr * this.best) : 0, lap_number: this.lap, position: 3, gear,
+      speed_kmh: !ui.engine ? 0 : ui.pit ? 60 : 90 + gear * 35 + Math.floor(sub * 30),
+      fuel_laps_x10: Math.round(this.fuel / PER_LAP * 10), track_pos: Math.floor(fr * 10000),
+      air_temp_x10: 261 - W.rain * 15, track_temp_x10: 372 - W.wetness * 40, flags, session: 3, race_flag: ui.flag,
     };
+    this.sectors.update(t);
+    const engine = { rpm: !ui.engine ? 0 : ui.pit ? 3200 : Math.floor(4800 + sub * 3300), shift_rpm: 7800, max_rpm: 8300 };
+    const base = [97, 90, 79, 84], comp = W.rain >= 3 || W.wetness >= 3 ? 2 : 2;  // demo stays on slicks
+    const tyres = {
+      wheels: base.map((b, i) => ({
+        temp_x10: Math.round((b - W.wetness * 5 + 3 * Math.sin(fr * 6 * Math.PI + i)) * 10),
+        psi_x100: Math.round((27.4 + (i < 2 ? 0.4 : -0.3) + 0.2 * Math.sin(fr * 4 + i)) * 100),
+        wear: 100 - Math.floor((now - this.t0) / 60000 * (i < 2 ? 1.4 : 1.1)) - (i === 0 ? 6 : 3),
+        brake_c: Math.floor(380 + 300 * Math.abs(Math.sin(fr * 8 * Math.PI)) + (i < 2 ? 120 : 0)),
+      })),
+      opt_min_x10: 800, opt_max_x10: 950, target_psi_x100: 2750, compound: comp,
+    };
+    const toFinishLaps = Math.ceil(this.timeLeft * 1000 / (this.best || this.target)) + 1;
+    const fuel = { liters_x10: Math.round(this.fuel * 10), per_lap_x100: PER_LAP * 100, capacity_x10: TANK * 10,
+      to_finish_x10: Math.round(((toFinishLaps + 0.5) * PER_LAP - this.fuel) * 10) };
+    const el = (now - this.t0) / 1000;
+    const race = { gap_ahead_ms: 1800 + Math.round(600 * Math.sin(el / 40)), gap_behind_ms: -(2500 + Math.round(900 * Math.cos(el / 55))),
+      time_left_s: Math.floor(this.timeLeft), laps_left: 0xFFFF, car_count: 24, track_limits_max: 4, ...this.race };
+    const weather = { ...W, grip_pct: 100 - W.wetness * 8, wind_kmh: 12 + W.rain * 4, wind_dir_deg: 225, clouds_pct: 20 + W.rain_in_30 * 18 + W.rain * 4 };
+    return { t, engine, tyres, car: { ...this.car }, fuel, race, timing: this.sectors.timing(), weather, history: this.history };
   },
 };
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Renderer — canvas primitives similar to what LovyanGFX offers on the ESP32
-// ---------------------------------------------------------------------------
+// ===========================================================================
 const W = 640, H = 288;
 const cv = document.getElementById("screen");
 const g = cv.getContext("2d");
@@ -471,7 +788,8 @@ function fitCanvas() {
 fitCanvas();
 addEventListener("resize", fitCanvas);
 
-const C = { bg: "#06070a", white: "#f4f6fa", grey: "#8a93a6", blue: "#3f8cff", lime: "#b9ef4f", red: "#ff4a1c", dark: "#11141b" };
+const C = { bg: "#06070a", white: "#f4f6fa", grey: "#8a93a6", dim: "#3a4152", panel: "#12161f", blue: "#3f8cff",
+  lime: "#b9ef4f", red: "#ff4a1c", green: "#22c55e", yellow: "#eab308", purple: "#a855f7", cyan: "#38bdf8", orange: "#ff8a1c" };
 const DF = "Barlow Condensed, Arial Narrow, sans-serif";
 function font(weight, size) { g.font = `${weight} ${size}px ${DF}`; }
 function text(s, x, y, color, align = "left") { g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); }
@@ -482,25 +800,24 @@ function fitText(s, x, y, maxW, weight, size, color, align = "left") {
   text(s, x, y, color, align);
 }
 function rect(x, y, w, h, color) { g.fillStyle = color; g.fillRect(x, y, w, h); }
-function chip(x, y, w, h, bg, fg, label) {
-  rect(x, y, w, h, bg); font(700, 22); text(label, x + w / 2, y + h - 8, fg, "center");
-}
+function label(x, y, w, s) { rect(x, y, w, 26, C.white); font(700, 19); text(s, x + 8, y + 20, "#000"); }
+function chip(x, y, w, h, bg, fg, s) { rect(x, y, w, h, bg); font(700, 22); text(s, x + w / 2, y + h - 8, fg, "center"); }
 function fuelIcon(x, y, color) {
   g.fillStyle = color; g.fillRect(x, y, 10, 15); g.fillRect(x + 11, y + 4, 3, 9);
   g.fillStyle = C.blue; g.fillRect(x + 2, y + 2, 6, 4);
 }
 function topBar(t, title) {
-  font(600, 22); g.letterSpacing = "1px";
-  text(title, 20, 34, C.white);
-  g.letterSpacing = "0px";
+  font(600, 22); text(title, 20, 34, C.white);
   font(700, 22); text(SESSIONS[t.session] || "", 300, 34, C.white);
   chip(416, 12, 78, 30, C.white, "#000", t.position ? `POS ${t.position}` : "POS -");
   rect(494, 12, 132, 30, C.blue);
   fuelIcon(504, 20, "#06122e");
   font(700, 22); text(fmtFuel(t.fuel_laps_x10), 522, 34, "#06122e");
 }
+const imperial = () => !!(S.config.units & 1);
+const fahrenheit = () => !!(S.config.units & 2);
+const deg = () => fahrenheit() ? "°F" : "°";
 
-// Closed track outline used by the mini map.
 const trackPts = (() => {
   const pts = [];
   for (let i = 0; i <= 200; i++) {
@@ -511,50 +828,37 @@ const trackPts = (() => {
   return pts;
 })();
 function trackXY(frac, bx, by, bw, bh) {
-  const i = Math.floor(frac * (trackPts.length - 1));
-  const [x, y] = trackPts[Math.min(i, trackPts.length - 1)];
+  const [x, y] = trackPts[Math.min(Math.floor(frac * (trackPts.length - 1)), trackPts.length - 1)];
   return [bx + bw / 2 + x * bw * 0.36, by + bh / 2 + y * bh * 0.62];
 }
 
 const FLAG_COLORS = { 1: "#22c55e", 2: "#ffd60a", 3: "#2f7bff", 4: "#f4f6fa", 5: "#000000", 7: "#e11d1d", 8: "#ffd60a", 9: "#ffd60a" };
 function drawFlag(f, x, y, w, h) {
-  if (f === 6) {  // chequered
+  if (f === 6) {
     const n = 6, m = 4, cw = w / n, ch = h / m;
     for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) rect(x + i * cw, y + j * ch, cw + .5, ch + .5, (i + j) % 2 ? "#000" : C.white);
   } else {
     rect(x, y, w, h, FLAG_COLORS[f] || "#333");
     if (f === 3) { g.fillStyle = "#ffd60a"; g.beginPath(); g.moveTo(x, y + h); g.lineTo(x + w * 0.35, y + h); g.lineTo(x + w, y); g.lineTo(x + w * 0.65, y); g.closePath(); g.fill(); }
   }
-  if (f === 8 || f === 9) {  // yellow board with SC / VSC lettering
-    const s = f === 8 ? "SC" : "VSC";
-    font(800, Math.round(h * 0.62)); text(s, x + w / 2, y + h * 0.76, "#111", "center");
-  }
+  if (f === 8 || f === 9) { font(800, Math.round(h * 0.62)); text(f === 8 ? "SC" : "VSC", x + w / 2, y + h * 0.76, "#111", "center"); }
   if (f === 5 || f === 6) { g.strokeStyle = "#5d6578"; g.lineWidth = 2; g.strokeRect(x, y, w, h); }
 }
-// Thin strip down the left edge of every screen while a flag (other than green) is waved.
 function flagStrip(f, now) {
   if (f <= 1) return;
-  const visible = (f === 2 || f === 3 || f === 7 || f >= 8) ? blinkOn(now) : true;
-  if (!visible) return;
+  if ((f === 2 || f === 3 || f === 7 || f >= 8) && !blinkOn(now)) return;
   if (f === 6) { drawFlag(6, 0, 0, 10, H); return; }
   rect(0, 0, 8, H, f === 5 ? "#ff5a3c" : FLAG_COLORS[f]);
 }
+const SECTOR_COLORS = [C.dim, C.yellow, C.green, C.purple];
+const BAND_COLORS = { cold: C.cyan, ok: C.green, hot: C.red, unknown: C.white };
+function tyreBand(t, lo, hi) { return !lo && !hi ? "unknown" : t < lo ? "cold" : t > hi ? "hot" : "ok"; }
+function brakeBand(c) { return c < 150 ? "cold" : c > 800 ? "hot" : "ok"; }
+function rainBars(x, y, level, color) {
+  for (let i = 0; i < 5; i++) rect(x + i * 14, y - 8 - i * 6, 10, 8 + i * 6, i < level ? color : C.dim);
+}
 
 const screens = {
-  RaceFlag(t, now) {
-    const f = t.race_flag;
-    if (f >= 8) {  // safety car: blinking yellow board, big SC / VSC
-      rect(0, 0, W, H, blinkOn(now) ? "#ffd60a" : "#2a2200");
-      font(800, 150); text(f === 8 ? "SC" : "VSC", W / 2, 168, blinkOn(now) ? "#111" : "#ffd60a", "center");
-      font(800, 46); text(FLAG_TITLES[f], W / 2, 250, blinkOn(now) ? "#111" : "#ffd60a", "center");
-      return;
-    }
-    drawFlag(f, 0, 0, W, H);
-    const light = f === 2 || f === 4 || f === 1;
-    const label = FLAG_TITLES[f];
-    if (f === 6 || f === 3) { rect(0, H / 2 - 52, W, 104, "rgba(0,0,0,.78)"); }
-    font(800, 96); text(label, W / 2, H / 2 + 34, f === 6 || f === 3 ? C.white : light ? "#111" : C.white, "center");
-  },
   NoSignal(t, now) {
     font(700, 40); text("WAITING FOR TELEMETRY", W / 2, 150, C.grey, "center");
     font(500, 20); text("Start the bridge on your PC · USB", W / 2, 186, "#5d6578", "center");
@@ -567,56 +871,168 @@ const screens = {
     font(700, 26); text("LAP", 426, 130, "#000");
     font(800, 104); text(pad(t.lap_number, 2), 424, 252, C.white);
   },
+  Delta(t) {
+    topBar(t, "DELTA");
+    const has = !!t.best_lap_ms, d = t.delta_ms, col = !has ? C.grey : d <= 0 ? C.green : C.red;
+    fitText(has ? fmtDelta(d) : "--.--", W / 2, 128, 300, 800, 84, col, "center");
+    // Bar: centre line = best lap; left = faster.
+    const cx = W / 2, half = 290, y = 144;
+    rect(cx - half, y, half * 2, 22, C.panel);
+    if (has) { const px = Math.round(Math.max(-2000, Math.min(2000, d)) * half / 2000); rect(px < 0 ? cx + px : cx, y, Math.abs(px), 22, col); }
+    rect(cx - 1, y - 4, 3, 30, C.white);
+    font(600, 15); text("-2.0", cx - half, y + 42, C.grey); text("+2.0", cx + half, y + 42, C.grey, "right");
+    const tm = S.timing;
+    for (let i = 0; i < 3; i++) {
+      const x = 30 + i * 196, cur = tm && tm.sector === i;
+      rect(x, 200, 184, 72, tm ? SECTOR_COLORS[tm.state[i]] : C.dim);
+      if (cur) { g.strokeStyle = C.white; g.lineWidth = 3; g.strokeRect(x + 1.5, 201.5, 181, 69); }
+      const dark = tm && tm.state[i] && tm.state[i] !== 3;
+      font(700, 20); text(`S${i + 1}`, x + 10, 222, dark ? "#111" : C.white);
+      const ms = tm ? tm.sector_ms[i] : 0;
+      font(800, 40); text(ms ? (ms / 1000).toFixed(3) : "--.---", x + 172, 262, dark ? "#111" : C.white, "right");
+    }
+  },
+  Tyres(t) {
+    topBar(t, "TYRES");
+    const ty = S.tyres;
+    if (!ty) { font(700, 30); text("NO TYRE DATA", W / 2, 170, C.grey, "center"); return; }
+    const pos = [[20, 56], [376, 56], [20, 172], [376, 172]], names = ["FL", "FR", "RL", "RR"];
+    ty.wheels.forEach((w, i) => {
+      const [x, y] = pos[i], band = tyreBand(w.temp_x10, ty.opt_min_x10, ty.opt_max_x10), col = BAND_COLORS[band];
+      rect(x, y, 244, 104, C.panel);
+      rect(i % 2 ? x + 238 : x, y, 6, 104, col);
+      const tx = i % 2 ? x + 14 : x + 20;
+      font(600, 16); text(names[i], tx, y + 22, C.grey);
+      font(800, 52); text(`${fmtTemp(w.temp_x10, fahrenheit())}${deg()}`, tx, y + 74, col);
+      font(700, 20); text(`${fmtPressure(w.psi_x100, !!(S.config.units & 4))} ${S.config.units & 4 ? "BAR" : "PSI"}`, tx + 128, y + 44, C.white);
+      const bc = BAND_COLORS[brakeBand(w.brake_c)];
+      font(600, 16); text("BRAKE", tx + 128, y + 66, C.grey); font(700, 18); text(`${w.brake_c}°`, tx + 178, y + 66, bc);
+      rect(tx, y + 86, 210, 8, C.dim); rect(tx, y + 86, 210 * w.wear / 100, 8, w.wear < 30 ? C.red : C.white);
+    });
+    font(700, 22); text(COMPOUND[ty.compound] || "-", W / 2, 120, C.white, "center");
+    font(600, 15); text("TARGET", W / 2, 172, C.grey, "center");
+    font(700, 20); text(fmtPressure(ty.target_psi_x100, !!(S.config.units & 4)), W / 2, 196, C.white, "center");
+    font(600, 15); text(`${fmtTemp(ty.opt_min_x10, fahrenheit())}–${fmtTemp(ty.opt_max_x10, fahrenheit())}${deg()}`, W / 2, 240, C.green, "center");
+  },
+  Car(t) {
+    topBar(t, "CAR");
+    const f = S.fuel, c = S.car;
+    label(20, 56, 290, "FUEL");
+    if (f) {
+      font(800, 60); text(fmtLiters(f.liters_x10), 20, 132, C.white);
+      const pct = f.capacity_x10 ? f.liters_x10 / f.capacity_x10 : 0;
+      rect(20, 144, 290, 10, C.dim); rect(20, 144, 290 * pct, 10, C.blue);
+      font(600, 17); text("PER LAP", 20, 180, C.grey); text("TO FINISH", 170, 180, C.grey);
+      font(700, 28); text(f.per_lap_x100 ? `${(f.per_lap_x100 / 100).toFixed(2)} L` : "-", 20, 212, C.white);
+      const tf = f.to_finish_x10, ok = tf <= 0;
+      text(tf === 0x7FFF ? "-" : ok ? "OK" : `+${fmtLiters(tf)}`, 170, 212, tf === 0x7FFF ? C.grey : ok ? C.green : C.orange);
+      font(600, 17); text(`${fmtFuel(t.fuel_laps_x10)} LEFT`, 20, 254, C.grey);
+    }
+    label(336, 56, 290, "SETTINGS");
+    if (c) {
+      const cells = [["ABS", fmtSetting(c.abs)], ["TC", fmtSetting(c.tc)], ["TC CUT", fmtSetting(c.tc_cut)], ["MAP", fmtSetting(c.map)], ["BB", fmtBias(c.bb_x10)], ["DAMAGE", `${c.damage}%`]];
+      cells.forEach(([k, v], i) => {
+        const x = 336 + (i % 3) * 98, y = 96 + Math.floor(i / 3) * 92;
+        rect(x, y, 92, 84, C.panel);
+        font(600, 16); text(k, x + 46, y + 22, C.grey, "center");
+        fitText(v, x + 46, y + 68, 84, 800, 40, k === "DAMAGE" && c.damage >= 10 ? C.red : C.white, "center");
+      });
+    }
+  },
+  Race(t) {
+    topBar(t, "RACE");
+    const r = S.race;
+    if (!r) return;
+    const pos = `P${t.position || "-"}`;
+    font(800, 96); text(pos, 20, 150, C.white);
+    const pw = g.measureText(pos).width;
+    font(700, 30); text(`/ ${r.car_count || "-"}`, 32 + pw, 150, C.grey);
+    label(20, 170, 140, "AHEAD"); label(170, 170, 140, "BEHIND");
+    font(800, 48); text(fmtGap(r.gap_ahead_ms), 20, 246, C.white); text(fmtGap(r.gap_behind_ms), 170, 246, C.white);
+    label(336, 56, 290, r.laps_left !== 0xFFFF ? "LAPS LEFT" : "TIME LEFT");
+    font(800, 56); text(r.laps_left !== 0xFFFF ? String(r.laps_left) : fmtDuration(r.time_left_s), 336, 136, C.white);
+    // Status chips
+    const chips = [];
+    chips.push([`LIMITS ${r.track_limits}/${r.track_limits_max || "-"}`, r.track_limits_max && r.track_limits >= r.track_limits_max - 1 ? C.orange : C.panel, C.white]);
+    chips.push([r.pit_window === 2 ? "PIT WINDOW OPEN" : r.pit_window === 1 ? "PIT WINDOW CLOSED" : "PIT WINDOW -", r.pit_window === 2 ? C.green : C.panel, r.pit_window === 2 ? "#06210f" : C.white]);
+    if (r.penalty) chips.push([`${PENALTY[r.penalty]}${r.penalty_s ? " " + r.penalty_s + "S" : ""}`, C.orange, "#1a0d00"]);
+    if (r.bits & 2) chips.push(["LAST LAP", C.white, "#000"]);
+    chips.slice(0, 4).forEach(([s, bg, fg], i) => {
+      const x = 336 + (i % 2) * 147, y = 158 + Math.floor(i / 2) * 58;
+      rect(x, y, 141, 50, bg); fitText(s, x + 70, y + 33, 130, 700, 20, fg, "center");
+    });
+  },
+  Weather(t) {
+    topBar(t, "WEATHER");
+    const w = S.weather;
+    if (!w) return;
+    const col = l => l >= 4 ? C.blue : l >= 2 ? C.cyan : l >= 1 ? "#8fd3ff" : C.dim;
+    font(800, 56); fitText(RAIN[w.rain], 20, 110, 300, 800, 56, w.rain ? C.cyan : C.white);
+    const cols = [["NOW", w.rain], ["+10 MIN", w.rain_in_10], ["+30 MIN", w.rain_in_30]];
+    cols.forEach(([k, l], i) => {
+      const x = 20 + i * 104;
+      font(600, 16); text(k, x, 150, C.grey);
+      rainBars(x, 212, l, col(l));
+      font(600, 14); fitText(RAIN[l], x, 236, 96, 600, 14, l ? C.white : C.grey);
+    });
+    label(336, 56, 290, "TRACK");
+    font(600, 16); text("WETNESS", 336, 110, C.grey); text("GRIP", 500, 110, C.grey);
+    rect(336, 120, 140, 14, C.dim); rect(336, 120, 140 * w.wetness / 5, 14, C.cyan);
+    font(800, 34); text(`${w.grip_pct}%`, 500, 138, w.grip_pct < 90 ? C.orange : C.white);
+    font(600, 16); text("AIR", 336, 176, C.grey); text("TRACK", 430, 176, C.grey); text("WIND", 530, 176, C.grey);
+    font(800, 34); text(`${fmtTemp(t.air_temp_x10, fahrenheit())}${deg()}`, 336, 214, C.white);
+    text(`${fmtTemp(t.track_temp_x10, fahrenheit())}${deg()}`, 430, 214, C.white);
+    // Wind arrow (direction the wind comes from)
+    const ax = 556, ay = 236, a = (w.wind_dir_deg - 90) * Math.PI / 180;
+    g.save(); g.translate(ax, ay); g.rotate(a + Math.PI);
+    g.fillStyle = C.white; g.beginPath(); g.moveTo(16, 0); g.lineTo(-10, -9); g.lineTo(-4, 0); g.lineTo(-10, 9); g.closePath(); g.fill(); g.restore();
+    font(700, 22); text(`${imperial() ? fmtSpeed(w.wind_kmh, true) + " MPH" : w.wind_kmh + " KM/H"}`, 530, 214, C.white);
+  },
   TrackData(t) {
     topBar(t, "TRACK DATA");
-    fitText(TRACK.toUpperCase(), 20, 78, 380, 700, 28, C.white);
-    // Mini map
+    fitText((S.track || TRACK).toUpperCase(), 20, 78, 380, 700, 28, C.white);
     const bx = 20, by = 92, bw = 300, bh = 180;
     g.strokeStyle = "#2a3040"; g.lineWidth = 2; g.strokeRect(bx, by, bw, bh);
     g.strokeStyle = C.white; g.lineWidth = 6; g.lineJoin = "round"; g.beginPath();
-    trackPts.forEach((p, i) => {
-      const [x, y] = trackXY(i / (trackPts.length - 1), bx, by, bw, bh);
-      i ? g.lineTo(x, y) : g.moveTo(x, y);
-    });
+    trackPts.forEach((p, i) => { const [x, y] = trackXY(i / (trackPts.length - 1), bx, by, bw, bh); i ? g.lineTo(x, y) : g.moveTo(x, y); });
     g.stroke();
     const [cx, cy] = trackXY(t.track_pos / 10000, bx, by, bw, bh);
     g.fillStyle = C.lime; g.beginPath(); g.arc(cx, cy, 9, 0, 7); g.fill();
     g.strokeStyle = "#000"; g.lineWidth = 2; g.stroke();
-    // Fuel
-    const pct = t.fuel_laps_x10 === 0xFFFF ? 0 : Math.round((t.fuel_laps_x10 / 10) / FUEL_START * 100);
+    const pct = S.fuel && S.fuel.capacity_x10 ? Math.round(S.fuel.liters_x10 / S.fuel.capacity_x10 * 100) : 0;
     font(600, 20); text("FUEL", 344, 92, C.grey);
     font(800, 34); text(`${pct}%`, 626, 96, C.white, "right");
     rect(344, 104, 282, 12, "#222838"); rect(344, 104, 282 * pct / 100, 12, C.blue);
-    // Weather
     rect(344, 140, 282, 30, C.white);
     font(700, 22); text("WEATHER", 354, 163, "#000");
     font(500, 18); text("AIR", 344, 200, C.grey); text("TRACK", 490, 200, C.grey);
-    font(800, 52); text(`${fmtTemp(t.air_temp_x10)}°`, 344, 254, C.white);
-    text(`${fmtTemp(t.track_temp_x10)}°`, 490, 254, C.white);
+    font(800, 52); text(`${fmtTemp(t.air_temp_x10, fahrenheit())}°`, 344, 254, C.white);
+    text(`${fmtTemp(t.track_temp_x10, fahrenheit())}°`, 490, 254, C.white);
   },
-  LapSummary(t) {
-    topBar(t, "LAP SUMMARY");
-    const rows = [["LAST", fmtLap(t.last_lap_ms, 3), C.white], ["BEST", fmtLap(t.best_lap_ms, 3), C.lime]];
+  Laps(t) {
+    topBar(t, "LAPS");
+    const rows = [["LAST", t.last_lap_ms, C.white], ["BEST", t.best_lap_ms, C.lime], ["OPTIMAL", S.timing ? S.timing.optimal_lap_ms : 0, C.purple]];
     rows.forEach(([k, v, c], i) => {
-      const y = 112 + i * 78;
-      font(600, 24); text(k, 20, y, C.grey);
-      font(800, 70); text(v, 20, y + 58, c);
+      const y = 92 + i * 66;
+      font(600, 20); text(k, 20, y, C.grey);
+      font(800, 46); text(fmtLap(v, 3), 20, y + 44, c);
     });
-    const dc = !t.best_lap_ms ? C.grey : t.delta_ms <= 0 ? C.lime : C.red;
-    rect(416, 104, 210, 34, C.white);
-    font(700, 26); text("DELTA", 426, 130, "#000");
-    fitText(t.best_lap_ms ? fmtDelta(t.delta_ms) : "--.--", 424, 236, 202, 800, 92, dc);
+    label(336, 56, 290, "HISTORY");
+    const h = S.history || [];
+    if (!h.length) { font(600, 20); text("NO LAPS YET", 346, 116, C.grey); }
+    h.forEach(([ms, valid], i) => {
+      const y = 112 + i * 34;
+      font(600, 18); text(`L${Math.max(1, t.lap_number - 1 - i)}`, 346, y, C.grey);
+      font(800, 30); text(fmtLap(ms, 3), 610, y, valid ? (ms === t.best_lap_ms ? C.lime : C.white) : C.red, "right");
+      if (!valid) rect(470, y - 11, 140, 2, C.red);
+    });
   },
   PitLimiter(t, now) {
-    const on = blinkOn(now);
-    const fw = t.race_flag > 1 ? 150 : 0;  // room for the flag badge
+    const on = blinkOn(now), fw = t.race_flag > 1 ? 150 : 0;
     rect(0, 0, W - fw, 126, on ? C.lime : "#1a2408");
     font(800, 78); text("PIT LIMITER", (W - fw) / 2, 96, on ? "#0b1300" : C.lime, "center");
-    if (fw) {
-      drawFlag(t.race_flag, W - fw + 8, 8, fw - 8, 82);
-      font(700, 22); text(FLAGS[t.race_flag], W - fw / 2 + 4, 118, C.white, "center");
-    }
-    const cols = [["GEAR", fmtGear(t.gear)], ["SPEED", String(t.speed_kmh)],
+    if (fw) { drawFlag(t.race_flag, W - fw + 8, 8, fw - 8, 82); font(700, 22); text(FLAGS[t.race_flag], W - fw / 2 + 4, 118, C.white, "center"); }
+    const cols = [["GEAR", fmtGear(t.gear)], [imperial() ? "SPEED MPH" : "SPEED", fmtSpeed(t.speed_kmh, imperial())],
                   ["POSITION", t.position ? String(t.position) : "-"], ["LAST PIT STOP", fmtLap(t.last_pit_ms)]];
     const cw = [120, 140, 150, 206];
     let x = 8;
@@ -627,17 +1043,39 @@ const screens = {
       x += cw[i];
     });
   },
+  RaceFlag(t, now) {
+    const f = t.race_flag;
+    if (f >= 8) {
+      const on = blinkOn(now);
+      rect(0, 0, W, H, on ? "#ffd60a" : "#2a2200");
+      font(800, 150); text(f === 8 ? "SC" : "VSC", W / 2, 168, on ? "#111" : "#ffd60a", "center");
+      font(800, 46); text(FLAG_TITLES[f], W / 2, 250, on ? "#111" : "#ffd60a", "center");
+      return;
+    }
+    drawFlag(f, 0, 0, W, H);
+    const light = f === 2 || f === 4 || f === 1;
+    if (f === 6 || f === 3) rect(0, H / 2 - 52, W, 104, "rgba(0,0,0,.78)");
+    font(800, 96); text(FLAG_TITLES[f], W / 2, H / 2 + 34, f === 6 || f === 3 ? C.white : light ? "#111" : C.white, "center");
+  },
   LapInvalidated() {
     const grd = g.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, 380);
     grd.addColorStop(0, "#3a0b04"); grd.addColorStop(1, C.bg);
     g.fillStyle = grd; g.fillRect(0, 0, W, H);
-    // Warning triangle
     g.fillStyle = C.red; g.beginPath(); g.moveTo(W / 2, 46); g.lineTo(W / 2 + 34, 106); g.lineTo(W / 2 - 34, 106); g.closePath(); g.fill();
     font(800, 44); text("!", W / 2, 102, "#1a0400", "center");
     font(800, 92); text("LAP INVALIDATED", W / 2, 206, C.red, "center");
   },
+  Alert(t, now) {
+    const a = alerts.current(now);
+    if (!a) return;
+    const A = alertLook(a);
+    rect(0, 0, W, H, A.bg);
+    rect(0, 0, W, 10, A.accent); rect(0, H - 10, W, 10, A.accent);
+    font(700, 28); text(A.kicker, W / 2, 70, A.sub, "center");
+    fitText(A.title, W / 2, 170, 600, 800, 96, A.fg, "center");
+    if (A.detail) { font(700, 32); text(A.detail, W / 2, 232, A.sub, "center"); }
+  },
   EngineOff() {
-    // Engine outline icon
     g.strokeStyle = C.white; g.lineWidth = 5; g.lineJoin = "round";
     g.beginPath();
     g.moveTo(56, 128); g.lineTo(92, 128); g.lineTo(100, 118); g.lineTo(140, 118); g.lineTo(150, 132);
@@ -651,114 +1089,188 @@ const screens = {
   },
 };
 
-function render(name, t, now) {
-  g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
-  screens[name](t || {}, now);
-  if (t && name !== "RaceFlag" && name !== "NoSignal") flagStrip(t.race_flag, now);
+function alertLook(a) {
+  const weather = { bg: "#04182a", fg: C.white, sub: C.cyan, accent: C.cyan, kicker: "WEATHER WARNING" };
+  const setting = { bg: "#0b0f18", fg: C.white, sub: C.grey, accent: C.blue, kicker: "CHANGED" };
+  const warn = { bg: "#2a1300", fg: C.orange, sub: "#ffd2a6", accent: C.orange, kicker: "WARNING" };
+  switch (a.kind) {
+    case "RainSoon": return { ...weather, title: "RAIN IN 10 MIN", detail: `${RAIN[a.value]} EXPECTED` };
+    case "RainStarted": return { ...weather, title: "RAIN STARTED", detail: RAIN[a.value] };
+    case "RainIncreasing": return { ...weather, title: "RAIN HEAVIER", detail: RAIN[a.value] };
+    case "TrackDrying": return { ...weather, sub: C.lime, accent: C.lime, title: "TRACK DRYING", detail: "SLICKS SOON" };
+    case "WetTyresAdvised": return { ...weather, title: "WET TYRES ADVISED", detail: "BOX FOR WETS" };
+    case "LowFuel": return { ...warn, kicker: "FUEL", title: "LOW FUEL", detail: fmtFuel(a.value) };
+    case "FuelShort": return { ...warn, kicker: "FUEL TO FINISH", title: `ADD ${fmtLiters(a.value)}`, detail: "NOT ENOUGH TO FINISH" };
+    case "Damage": return { ...warn, bg: "#2a0606", fg: C.red, accent: C.red, sub: "#ffb4a6", kicker: "CAR", title: "DAMAGE", detail: `${a.value}%` };
+    case "Penalty": return { ...warn, kicker: "PENALTY", title: PENALTY[a.value], detail: a.extra ? `${a.extra} S` : "SERVE WITHIN 3 LAPS" };
+    case "TrackLimits": return { bg: "#221c00", fg: "#ffd60a", sub: "#fff0a6", accent: "#ffd60a", kicker: "WARNING", title: "TRACK LIMITS", detail: `${a.value} / ${a.extra || "-"}` };
+    case "Abs": return { ...setting, title: `ABS ${a.value}` };
+    case "Tc": return { ...setting, title: `TC ${a.value}` };
+    case "TcCut": return { ...setting, title: `TC CUT ${a.value}` };
+    case "EngineMap": return { ...setting, title: `MAP ${a.value}` };
+    case "BrakeBias": return { ...setting, kicker: "BRAKE BIAS", title: fmtBias(a.value) };
+    case "LastLap": return { bg: C.white, fg: "#000", sub: "#333", accent: "#000", kicker: "RACE", title: "LAST LAP" };
+    case "PitWindowOpen": return { bg: "#03200e", fg: C.green, sub: "#bdf5cf", accent: C.green, kicker: "STRATEGY", title: "PIT WINDOW OPEN" };
+  }
+  return { bg: C.bg, fg: C.white, sub: C.grey, accent: C.grey, kicker: "", title: a.kind };
 }
 
-// ---------------------------------------------------------------------------
-// Wiring: demo source → encode → (wire) → parse → decode → screen manager → render
-// ---------------------------------------------------------------------------
+function render(name, now) {
+  g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+  screens[name](S.t || {}, now);
+  if (S.t && name !== "RaceFlag" && name !== "NoSignal" && name !== "Alert") flagStrip(S.t.race_flag, now);
+}
+
+// ===========================================================================
+// Wiring: demo → bridge scheduler → wire → parser → state → alerts/screens → render
+// ===========================================================================
 const $ = id => document.getElementById(id);
-const ui = { pit: false, engine: true, usb: true, noise: false, flag: 1 };
 const parser = new FrameParser();
 const sm = new ScreenManager();
-let latest = null, frames = 0, lastSend = 0, lastHello = -1e9, lastHex = null;
-
-const LED = { blue: "on-blue", green: "on-green", red: "on-red" };
-const LED_FLAG = { 2: "on-yellow", 3: "on-blue", 5: "on-red", 7: "on-red", 4: "on-white", 6: "on-white", 8: "on-yellow", 9: "on-yellow" };
-function setLeds(screen, now, t) {
-  let cls = "";
-  const f = t ? t.race_flag : 0;
-  if (screen !== "NoSignal" && LED_FLAG[f]) cls = blinkOn(now) ? LED_FLAG[f] : "";
-  else if (screen === "PitLimiter") cls = blinkOn(now) ? LED.green : "";
-  else if (screen === "LapInvalidated") cls = Math.floor(now / 160) % 2 ? LED.red : "";
-  else if (screen !== "NoSignal" && screen !== "EngineOff") cls = LED.blue;
-  for (const id of ["led1", "led2"]) $(id).className = "led " + cls;
-}
-
-const SCREEN_LABEL = {
-  NoSignal: "Waiting for telemetry", CurrentLap: "Current lap", TrackData: "Track data",
-  LapSummary: "Lap summary", RaceFlag: "Race flag", PitLimiter: "Pit limiter", LapInvalidated: "Lap invalidated", EngineOff: "Engine off",
-};
+const alerts = new AlertEngine();
+const S = { config: { page_mask: 0xFF, brightness: 200, units: 0 } };
+const lastSent = {}, lastPayload = {};
+let frames = 0, lastSend = 0, wireLog = [];
+const INTERVALS = { tyres: 200, car: 200, race: 200, fuel: 500, weather: 1000, timing: 1000, history: 2000 };
 
 function wire(bytes) {
-  if (ui.noise && Math.random() < 0.25) {
+  if (ui.noise && Math.random() < 0.2) {
     bytes = Uint8Array.from(bytes);
-    bytes[3 + Math.floor(Math.random() * (bytes.length - 3))] ^= 0x40;  // flip a bit
+    bytes[3 + Math.floor(Math.random() * (bytes.length - 3))] ^= 0x40;
   }
   for (const b of bytes) parser.push(b);
-  return bytes;
+  wireLog.push(bytes); if (wireLog.length > 6) wireLog.shift();
 }
 
-function updateReadout(t) {
-  if (!t) return;
-  const items = [
-    ["Lap time", fmtLap(t.current_lap_ms, 3)], ["Lap", t.lap_number], ["Last", fmtLap(t.last_lap_ms, 3)],
-    ["Best", fmtLap(t.best_lap_ms, 3)], ["Delta", t.best_lap_ms ? fmtDelta(t.delta_ms) : "—"],
-    ["Gear", fmtGear(t.gear)], ["Speed", `${t.speed_kmh} km/h`], ["Fuel", fmtFuel(t.fuel_laps_x10)],
-    ["Track pos", `${(t.track_pos / 100).toFixed(1)} %`], ["Flags", "0b" + t.flags.toString(2).padStart(5, "0")], ["Race flag", FLAGS[t.race_flag] || "—"],
-  ];
-  $("readout").innerHTML = items.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+function sendSnapshot(snap, now) {
+  if (!lastSent.hello || now - lastSent.hello >= 2000) {
+    lastSent.hello = now;
+    wire(encodeFrame(MSG.HELLO, Uint8Array.of(1)));
+    wire(enc.config({ page_mask: 0xFF, brightness: 200, units: ui.imperial ? 3 : 0 }));
+    wire(encodeFrame(MSG.TRACK, new TextEncoder().encode(TRACK)));
+  }
+  wire(enc.telemetry(snap.t));
+  wire(enc.engine(snap.engine));
+  for (const [k, iv] of Object.entries(INTERVALS)) {
+    const f = enc[k](snap[k]), key = Array.from(f).join(",");
+    const changed = (k === "timing" || k === "history" || k === "car" || k === "race" || k === "weather") && key !== lastPayload[k];
+    if (changed || !lastSent[k] || now - lastSent[k] >= iv) { wire(f); lastSent[k] = now; lastPayload[k] = key; }
+  }
 }
+
+function updateLeds(screen, now) {
+  const [l, r] = ledsFor(screen, S, now);
+  $("led1").className = "led" + (l ? " on-" + l : "");
+  $("led2").className = "led" + (r ? " on-" + r : "");
+}
+
+const SCREEN_LABEL = { NoSignal: "Waiting for telemetry", RaceFlag: "Race flag", LapInvalidated: "Lap invalidated",
+  Alert: "Warning popup", PitLimiter: "Pit limiter", EngineOff: "Engine off", ...PAGE_LABEL };
 
 function tick() {
   const now = performance.now();
   if (now - lastSend >= 33) {
     lastSend = now;
-    if (ui.usb) {
-      if (now - lastHello > 2000) {
-        lastHello = now;
-        wire(encodeFrame(MSG_HELLO, Uint8Array.of(1)));
-        wire(encodeFrame(MSG_TRACK_INFO, new TextEncoder().encode(TRACK)));
-      }
-      lastHex = wire(encodeTelemetry(demo.poll(now, ui)));
-    } else {
-      demo.poll(now, ui);
-    }
+    const snap = demo.poll(now);
+    if (ui.usb) sendSnapshot(snap, now);
     let f;
     while ((f = parser.next())) {
-      if (f.type === MSG_TELEMETRY) {
-        const t = decodeTelemetry(f.payload);
-        if (t) { latest = t; sm.onTelemetry(t, now); frames++; }
-      }
+      const type = applyFrame(f, S);
+      if (type === MSG.TELEMETRY) { sm.onTelemetry(S.t, now); frames++; }
+      if (type === MSG.CONFIG) sm.setPageMask(S.config.page_mask);
+      if (type) alerts.update(S, now);
     }
+    alerts.update(S, now);
   }
-  const screen = sm.current(now);
-  render(screen, latest, now);
-  setLeds(screen, now, latest);
+  const a = alerts.current(now);
+  const screen = sm.current(now, !!a);
+  render(screen, now);
+  updateLeds(screen, now);
   $("screenName").textContent = SCREEN_LABEL[screen];
   $("frameCount").textContent = frames;
   $("crcErrors").textContent = parser.crcErrors;
   requestAnimationFrame(tick);
 }
 
-let readoutTimer = setInterval(() => {
-  updateReadout(latest);
-  if (lastHex) {
-    const h = Array.from(lastHex, b => b.toString(16).padStart(2, "0").toUpperCase());
-    $("hex").innerHTML = `<b>${h.slice(0, 3).join(" ")}</b> ${h.slice(3, -2).join(" ")} <b>${h.slice(-2).join(" ")}</b>`;
-  }
-}, 200);
-
-$("btnPage").addEventListener("click", () => sm.nextPage());
-$("btnInvalid").addEventListener("click", () => { demo.invalid = true; });
-$("btnFinish").addEventListener("click", () => { demo.finish(performance.now()); });
-$("flagButtons").addEventListener("click", e => {
-  const b = e.target.closest("button[data-flag]");
-  if (!b) return;
-  ui.flag = Number(b.dataset.flag);
-  for (const x of $("flagButtons").children) x.setAttribute("aria-pressed", String(x === b));
+// Page buttons under the device
+const pageWrap = $("pageButtons");
+PAGES.forEach((p, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = PAGE_LABEL[p]; b.dataset.page = i; b.setAttribute("aria-pressed", "false");
+  pageWrap.appendChild(b);
 });
+pageWrap.addEventListener("click", e => {
+  const b = e.target.closest("button[data-page]"); if (!b) return;
+  sm.page = Number(b.dataset.page);
+});
+function syncPageButtons() {
+  for (const b of pageWrap.children) b.setAttribute("aria-pressed", String(Number(b.dataset.page) === sm.page));
+}
+
+function updateReadout() {
+  syncPageButtons();
+  const t = S.t; if (!t) return;
+  const e = S.engine || {}, fu = S.fuel || {}, w = S.weather || {}, c = S.car || {}, r = S.race || {};
+  const items = [
+    ["Lap time", fmtLap(t.current_lap_ms, 3)], ["Lap", t.lap_number], ["Delta", t.best_lap_ms ? fmtDelta(t.delta_ms) : "—"],
+    ["RPM", `${e.rpm ?? "—"} / ${e.shift_rpm ?? "—"}`], ["Gear", fmtGear(t.gear)], ["Speed", `${t.speed_kmh} km/h`],
+    ["Fuel", fu.liters_x10 != null ? fmtLiters(fu.liters_x10) : "—"], ["Fuel laps", fmtFuel(t.fuel_laps_x10)],
+    ["ABS / TC / BB", c.abs != null ? `${fmtSetting(c.abs)} / ${fmtSetting(c.tc)} / ${fmtBias(c.bb_x10)}` : "—"],
+    ["Gap ahead", r.gap_ahead_ms != null ? fmtGap(r.gap_ahead_ms) : "—"], ["Time left", r.time_left_s != null ? fmtDuration(r.time_left_s) : "—"],
+    ["Rain now/+10", w.rain != null ? `${w.rain} / ${w.rain_in_10}` : "—"], ["Race flag", FLAGS[t.race_flag] || "—"],
+    ["Alerts queued", alerts.q.length],
+  ];
+  $("readout").innerHTML = items.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  $("hex").innerHTML = wireLog.map(f => {
+    const h = Array.from(f, b => b.toString(16).padStart(2, "0").toUpperCase());
+    return `<b>${h.slice(0, 3).join(" ")}</b> ${h.slice(3, -2).join(" ")} <b>${h.slice(-2).join(" ")}</b>`;
+  }).join("\n");
+}
+setInterval(updateReadout, 250);
+
+// Controls
+$("btnPage").addEventListener("click", () => sm.step(1));
+$("btnPrev").addEventListener("click", () => sm.step(-1));
+$("btnInvalid").addEventListener("click", () => { demo.invalid = true; demo.race.track_limits = Math.min(9, demo.race.track_limits + 1); });
+$("btnFinish").addEventListener("click", () => demo.finish(performance.now()));
+$("btnDamage").addEventListener("click", () => { demo.car.damage = Math.min(100, demo.car.damage + 12); });
+$("btnLowFuel").addEventListener("click", () => { demo.fuel = PER_LAP * 1.8; });
+$("btnPenalty").addEventListener("click", () => { demo.race.penalty = demo.race.penalty ? 0 : 1; $("btnPenalty").textContent = demo.race.penalty ? "Clear penalty" : "Drive-through"; });
+$("btnLimits").addEventListener("click", () => { demo.race.track_limits = Math.min(9, demo.race.track_limits + 1); });
+$("btnLastLap").addEventListener("click", () => { demo.race.bits ^= 2; });
+$("btnPitWindow").addEventListener("click", () => { demo.race.pit_window = demo.race.pit_window === 2 ? 1 : 2; $("btnPitWindow").textContent = demo.race.pit_window === 2 ? "Close pit window" : "Open pit window"; });
+document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click", () => {
+  const d = Number(b.dataset.d), k = b.dataset.set, c = demo.car;
+  if (k === "bb") c.bb_x10 = Math.max(450, Math.min(700, c.bb_x10 + d));
+  else c[k] = Math.max(0, Math.min(12, c[k] + d));
+}));
+function radio(groupId, attr, onPick) {
+  $(groupId).addEventListener("click", e => {
+    const b = e.target.closest(`button[${attr}]`); if (!b) return;
+    onPick(b.getAttribute(attr));
+    for (const x of $(groupId).children) x.setAttribute("aria-pressed", String(x === b));
+  });
+}
+radio("flagButtons", "data-flag", v => { ui.flag = Number(v); });
+radio("weatherButtons", "data-w", v => { ui.weather = v; });
 $("tPit").addEventListener("change", e => { ui.pit = e.target.checked; });
 $("tEngine").addEventListener("change", e => { ui.engine = e.target.checked; });
 $("tUsb").addEventListener("change", e => { ui.usb = e.target.checked; });
 $("tNoise").addEventListener("change", e => { ui.noise = e.target.checked; });
+$("tUnits").addEventListener("change", e => { ui.imperial = e.target.checked; lastSent.hello = 0; });
 
-demo.lapStart = performance.now() - 61500;  // open mid-lap so the first frame looks realistic
-demo.target = 88200;
-demo.last = 89012; demo.best = 87950; demo.lap = 3; demo.fuel = 9.0;
+// Open mid-race so every page has data at first sight.
+(function seed() {
+  const now = performance.now();
+  demo.t0 = now - 11 * 60 * 1000; demo.lastT = now;
+  demo.lapStart = now - 61500; demo.target = 88200;
+  demo.lap = 8; demo.last = 89012; demo.best = 87950; demo.fuel = 34;
+  demo.history = [[89012, true], [88404, false], [87950, true], [88731, true], [89377, true]];
+  const st = demo.sectors;
+  st.lap = 8; st.sector = 2; st.start = 59800; st.valid = true;
+  st.best = [29210, 30540, 28130]; st.sb = [29100, 30540, 28050]; st.sbLap = 87950;
+  st.times = [29350, 30450, 0]; st.states = [1, 3, 0];
+})();
 (document.fonts ? document.fonts.load(`800 40px "Barlow Condensed"`) : Promise.resolve())
   .catch(() => {}).finally(() => requestAnimationFrame(tick));
 </script>

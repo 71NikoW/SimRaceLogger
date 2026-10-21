@@ -38,17 +38,59 @@ TEST(signal_survives_millis_wraparound) {
 TEST(page_cycling) {
   ScreenManager m;
   m.onTelemetry(driving(), 0);
+  const Screen order[] = {Screen::Delta, Screen::Tyres, Screen::Car, Screen::Race,
+                          Screen::Weather, Screen::TrackData, Screen::Laps, Screen::CurrentLap};
+  for (Screen s : order) {
+    m.nextPage();
+    CHECK(m.current(0) == s);
+  }
+  m.prevPage();
+  CHECK(m.current(0) == Screen::Laps);
+}
+
+TEST(page_mask_skips_disabled_pages) {
+  ScreenManager m;
+  m.onTelemetry(driving(), 0);
+  // Only CurrentLap, Tyres and Weather.
+  m.setPageMask((1u << 0) | (1u << 2) | (1u << 5));
   m.nextPage();
-  CHECK(m.current(0) == Screen::TrackData);
+  CHECK(m.current(0) == Screen::Tyres);
   m.nextPage();
-  CHECK(m.current(0) == Screen::LapSummary);
+  CHECK(m.current(0) == Screen::Weather);
   m.nextPage();
   CHECK(m.current(0) == Screen::CurrentLap);
+}
+
+TEST(page_mask_moves_off_disabled_current_page) {
+  ScreenManager m;
+  m.nextPage();  // Delta
+  m.setPageMask(1u << 4);
+  CHECK(m.page() == Screen::Race);
+  m.setPageMask(0);  // nothing enabled -> CurrentLap only
+  CHECK(m.page() == Screen::CurrentLap);
+  m.nextPage();
+  CHECK(m.page() == Screen::CurrentLap);
+}
+
+TEST(alert_overlay_priority) {
+  ScreenManager m;
+  Telemetry t = driving();
+  t.flags |= kFlagPitLimiter;
+  m.onTelemetry(t, 0);
+  CHECK(m.current(0, true) == Screen::Alert);  // beats pit limiter
+  t.flags |= kFlagLapInvalid;
+  m.onTelemetry(t, 10);
+  CHECK(m.current(10, true) == Screen::LapInvalidated);  // but not invalid lap
 }
 
 TEST(pit_limiter_overrides_page_and_returns) {
   ScreenManager m;
   m.nextPage();
+  m.nextPage();
+  m.nextPage();
+  m.nextPage();
+  m.nextPage();
+  m.nextPage();  // TrackData
   Telemetry t = driving();
   t.flags |= kFlagPitLimiter;
   m.onTelemetry(t, 0);

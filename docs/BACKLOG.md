@@ -3,38 +3,39 @@
 Brainstorm, not yet prioritised. ✅ = done.
 
 ## Race information
+- ✅ Weather warnings: rain in 10 min, rain started / heavier, track drying, wet tyres advised
 - ✅ Flags incl. safety car and virtual safety car / full course yellow
-- Penalties: drive-through, stop & go, time penalty, track-limit warnings ("3/4")
-- Gap ahead / behind and opponent lap times (race only)
-- Laps remaining / session time remaining, "last lap" indicator
+- ✅ Penalties: drive-through, stop & go, time penalty, track-limit warnings ("3/4")
+- ✅ Gap ahead / behind; opponent lap times still open
+- ✅ Laps remaining / session time remaining, "last lap" indicator
 - Blue-flag warning with gap to the faster car
-- Pit window open/closed, mandatory stop done
+- ✅ Pit window open/closed, mandatory stop done
 
 ## Car
-- Shift lights on the two LEDs (or an optional WS2812 strip), per-car RPM
-- Fuel: per-lap average, fuel to add to finish, low-fuel warning
-- Tyres: temperatures, pressures, wear; brake temps
-- ABS / TC / brake bias / engine map — popup when changed on the wheel
-- Damage warning
+- ✅ Shift lights on the two LEDs; optional WS2812 strip still open
+- ✅ Fuel: per-lap average, fuel to add to finish, low-fuel warning
+- ✅ Tyres: temperatures, pressures, wear; brake temps
+- ✅ ABS / TC / brake bias / engine map — popup when changed on the wheel
+- ✅ Damage warning
 
 ## Timing
-- Live delta bar to best / session best / optimal lap
-- Sector times with colour (purple / green / yellow)
-- Theoretical best lap from best sectors
-- Lap history list (last 5 laps)
+- ✅ Live delta bar to best / session best / optimal lap
+- ✅ Sector times with colour (purple / green / yellow)
+- ✅ Theoretical best lap from best sectors
+- ✅ Lap history list (last 5 laps)
 
 ## Device & UX
-- Brightness button + auto-dim at night
-- Configurable pages and priorities (web configurator over USB / Wi-Fi)
-- Themes / colour schemes, unit switch (km/h · mph, °C · °F)
+- ✅ Brightness button (`--brightness` from the bridge); auto-dim at night still open
+- ✅ Configurable pages (`--pages`); web configurator still open
+- ✅ Unit switch (`--units mph,fahrenheit,bar`); themes still open
 - Boot screen with firmware + protocol version
 - Firmware update via the bridge (no Arduino IDE for end users)
 
 ## Software
 - Game adapters: ACC, iRacing, LMU / rFactor 2, F1 25, AC / AC EVO, AMS2, RaceRoom
 - SimHub plugin as an alternative to the standalone bridge
-- Session logging to CSV (lap times, fuel, flags) — the "logger" part of the repo name
-- Tray app with auto-detect of game and COM port
+- ✅ Session logging to CSV (lap times, fuel, flags) — the "logger" part of the repo name
+- ✅ Auto-detect of the COM port (`--port auto`); tray app + game auto-detect still open
 - Multiple displays on one bridge (e.g. one for timing, one for car)
 
 ## Hardware & community

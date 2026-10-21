@@ -38,7 +38,12 @@ static std::map<std::string, Frame> loadVectors() {
 
 TEST(vectors_all_decode) {
   auto v = loadVectors();
-  CHECK_EQ(v.size(), 4u);
+  CHECK_EQ(v.size(), 13u);
+  State st;
+  for (auto& kv : v) CHECK(applyFrame(kv.second, st) != 0);
+  CHECK(st.has_engine && st.has_tyres && st.has_car && st.has_fuel && st.has_race);
+  CHECK(st.has_timing && st.has_weather && st.has_history);
+  CHECK_STR(st.track_name, "Autodromo Enzo e Dino Ferrari");
   CHECK_EQ(v["hello"].type, kMsgHello);
   CHECK_EQ(v["hello"].payload[0], kProtocolVersion);
 }
@@ -89,4 +94,73 @@ TEST(vectors_track_info) {
   CHECK_EQ(f.type, kMsgTrackInfo);
   CHECK(std::string(reinterpret_cast<const char*>(f.payload), f.len) ==
         "Autodromo Enzo e Dino Ferrari");
+}
+
+TEST(vectors_slow_messages) {
+  auto v = loadVectors();
+  State s;
+  for (auto& kv : v) applyFrame(kv.second, s);
+
+  CHECK_EQ(s.engine.rpm, 7450);
+  CHECK_EQ(s.engine.shift_rpm, 7800);
+  CHECK_EQ(s.engine.max_rpm, 8300);
+
+  CHECK_EQ(s.tyres.wheel[kFL].temp_x10, 855);
+  CHECK_EQ(s.tyres.wheel[kFR].pressure_psi_x100, 2761);
+  CHECK_EQ(s.tyres.wheel[kRL].temp_x10, -12);
+  CHECK_EQ(s.tyres.wheel[kRL].wear_pct, 99);
+  CHECK_EQ(s.tyres.wheel[kRR].brake_temp_c, 410);
+  CHECK_EQ(s.tyres.opt_min_x10, 800);
+  CHECK_EQ(s.tyres.opt_max_x10, 950);
+  CHECK_EQ(s.tyres.target_psi_x100, 2750);
+  CHECK(s.tyres.compound == Compound::Medium);
+
+  CHECK_EQ(s.car.abs, 3);
+  CHECK_EQ(s.car.tc, 4);
+  CHECK_EQ(s.car.tc_cut, kSettingNa);
+  CHECK_EQ(s.car.engine_map, 1);
+  CHECK_EQ(s.car.brake_bias_x10, 565);
+  CHECK_EQ(s.car.damage_pct, 12);
+
+  CHECK_EQ(s.fuel.liters_x10, 425);
+  CHECK_EQ(s.fuel.per_lap_x100, 281);
+  CHECK_EQ(s.fuel.capacity_x10, 1000);
+  CHECK_EQ(s.fuel.to_finish_x10, -32);
+
+  CHECK_EQ(s.race.gap_ahead_ms, 1834);
+  CHECK_EQ(s.race.gap_behind_ms, -2510);
+  CHECK_EQ(s.race.time_left_s, 1234u);
+  CHECK_EQ(s.race.laps_left, kLapsLeftUnknown);
+  CHECK_EQ(s.race.car_count, 24);
+  CHECK(s.race.penalty == Penalty::DriveThrough);
+  CHECK_EQ(s.race.track_limits, 2);
+  CHECK_EQ(s.race.track_limits_max, 4);
+  CHECK(s.race.pit_window == PitWindow::Open);
+  CHECK_EQ(s.race.bits, kRaceLastLap);
+
+  CHECK_EQ(s.timing.sector, 1);
+  CHECK_EQ(s.timing.sector_ms[0], 29512u);
+  CHECK_EQ(s.timing.best_sector_ms[2], 27870u);
+  CHECK(s.timing.state[0] == SectorState::Slower);
+  CHECK(s.timing.state[2] == SectorState::SessionBest);
+  CHECK_EQ(s.timing.optimal_lap_ms, 88272u);
+  CHECK_EQ(s.timing.session_best_ms, 88105u);
+
+  CHECK_EQ(s.weather.rain, 2);
+  CHECK_EQ(s.weather.rain_in_10, 3);
+  CHECK_EQ(s.weather.rain_in_30, 4);
+  CHECK_EQ(s.weather.wetness, 1);
+  CHECK_EQ(s.weather.grip_pct, 92);
+  CHECK_EQ(s.weather.wind_kmh, 12);
+  CHECK_EQ(s.weather.wind_dir_deg, 225);
+  CHECK_EQ(s.weather.clouds_pct, 80);
+
+  CHECK_EQ(s.history.count, 3);
+  CHECK_EQ(s.history.lap_ms[0], 88201u);
+  CHECK(s.history.valid(0) && !s.history.valid(1) && s.history.valid(2));
+  CHECK_EQ(s.history.lap_ms[3], 0u);
+
+  CHECK_EQ(s.config.page_mask, 0xA5);
+  CHECK_EQ(s.config.brightness, 128);
+  CHECK_EQ(s.config.units, kUnitsMph | kUnitsBar);
 }
