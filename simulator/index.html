@@ -1,0 +1,683 @@
+<title>Rig Lap Display Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: device on a workbench (left) beside the bridge controls (right); stacks on phones. */
+:root {
+  --bg: #eef1f6;
+  --panel: #ffffff;
+  --fg: #141a26;
+  --muted: #5b6577;
+  --line: #d7dde8;
+  --accent: #1f4fd8;
+  --accent-fg: #ffffff;
+  --chip: #e6ecf8;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* The device itself keeps one look in both themes. */
+  --case: #1b47c9;
+  --case-hi: #3366ee;
+  --case-lo: #12339a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1118; --panel: #151b26; --fg: #e7ebf3; --muted: #93a0b6;
+    --line: #263042; --accent: #5b8cff; --accent-fg: #0b1020; --chip: #1d2738;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1118; --panel: #151b26; --fg: #e7ebf3; --muted: #93a0b6;
+  --line: #263042; --accent: #5b8cff; --accent-fg: #0b1020; --chip: #1d2738;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 22px;
+}
+header { display: grid; gap: 4px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  margin: 0;
+  text-wrap: balance;
+}
+.sub { color: var(--muted); margin: 0; max-width: 68ch; }
+
+.main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- Device --- */
+.bench {
+  display: grid;
+  place-items: center;
+  padding: clamp(18px, 4vw, 44px) clamp(8px, 3vw, 32px);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--panel);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.device {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  padding: 7% 6.5% 6.5%;
+  border-radius: 22px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, var(--case-hi), var(--case) 45%, var(--case-lo));
+  box-shadow:
+    0 30px 40px -24px rgba(5, 14, 40, .55),
+    inset 0 2px 0 rgba(255,255,255,.18),
+    inset 0 -3px 0 rgba(0,0,0,.25);
+}
+.leds {
+  position: absolute;
+  top: 2.6%;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 15%;
+}
+.led {
+  width: clamp(8px, 1.6vw, 12px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #0b1a4a;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.6);
+  transition: background .12s, box-shadow .12s;
+}
+.led.on-blue  { background: #4d7bff; box-shadow: 0 0 10px 2px rgba(77,123,255,.8); }
+.led.on-green { background: #7cff5a; box-shadow: 0 0 10px 2px rgba(124,255,90,.8); }
+.led.on-red   { background: #ff3b2f; box-shadow: 0 0 10px 2px rgba(255,59,47,.85); }
+.bezel {
+  border-radius: 10px;
+  padding: 1.6%;
+  background: #05070b;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,.8), 0 0 0 3px var(--case-lo);
+}
+canvas { display: block; width: 100%; height: auto; max-width: 100%; border-radius: 4px; }
+.device-caption {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center;
+  margin-top: 16px; color: var(--muted); font-size: 13px;
+}
+.device-caption b { color: var(--fg); font-weight: 600; }
+
+/* --- Controls --- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.group { display: grid; gap: 10px; }
+.label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 13px;
+  color: var(--muted);
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: 600 14px/1 var(--font-body);
+  color: var(--fg);
+  background: var(--chip);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.toggle span { font-weight: 500; }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+.switch i {
+  position: absolute; inset: 0; border-radius: 99px; background: var(--line);
+  transition: background .15s; pointer-events: none;
+}
+.switch i::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--panel); transition: transform .15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+.switch input:checked + i { background: var(--accent); }
+.switch input:checked + i::after { transform: translateX(18px); }
+.switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px 14px;
+  font-variant-numeric: tabular-nums;
+}
+.readout div { display: grid; gap: 0; }
+.readout dt { font-size: 12px; color: var(--muted); }
+.readout dd { margin: 0; font-family: var(--font-mono); font-size: 14px; }
+.hex {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+.hex b { color: var(--accent); font-weight: 500; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { .led, .switch i, .switch i::after { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Rig Lap Display Simulator</h1>
+    <p class="sub">The display as it will look on the rig, driven by the demo telemetry. Every frame goes through the same protocol and screen logic as the ESP32 firmware.</p>
+  </header>
+
+  <div class="main">
+    <section class="bench" aria-label="Display preview">
+      <div class="device">
+        <div class="leds"><span class="led" id="led1"></span><span class="led" id="led2"></span></div>
+        <div class="bezel"><canvas id="screen" width="640" height="288" aria-label="Lap display screen"></canvas></div>
+      </div>
+      <div class="device-caption">
+        <span>Screen: <b id="screenName">—</b></span>
+        <span>Frames: <b id="frameCount">0</b></span>
+        <span>CRC errors: <b id="crcErrors">0</b></span>
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Controls">
+      <div class="group">
+        <div class="label">Display button</div>
+        <div class="row">
+          <button class="primary" id="btnPage" type="button">Next page</button>
+        </div>
+        <p class="note">Cycles Current lap → Track data → Lap summary, like the hardware button.</p>
+      </div>
+
+      <div class="group">
+        <div class="label">Car</div>
+        <label class="toggle" for="tPit"><span>Pit limiter</span><span class="switch"><input type="checkbox" id="tPit"><i></i></span></label>
+        <label class="toggle" for="tEngine"><span>Engine running</span><span class="switch"><input type="checkbox" id="tEngine" checked><i></i></span></label>
+        <div class="row">
+          <button id="btnInvalid" type="button">Invalidate lap</button>
+          <button id="btnFinish" type="button">Finish lap</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label">USB link</div>
+        <label class="toggle" for="tUsb"><span>Bridge connected</span><span class="switch"><input type="checkbox" id="tUsb" checked><i></i></span></label>
+        <label class="toggle" for="tNoise"><span>Line noise</span><span class="switch"><input type="checkbox" id="tNoise"><i></i></span></label>
+      </div>
+
+      <div class="group">
+        <div class="label">Decoded telemetry</div>
+        <dl class="readout" id="readout"></dl>
+      </div>
+
+      <div class="group">
+        <div class="label">Last frame on the wire</div>
+        <pre class="hex" id="hex">—</pre>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Protocol v1 (mirror of bridge/src/rigdash/protocol.py and firmware core)
+// ---------------------------------------------------------------------------
+const SOF = 0xA5, MAX_PAYLOAD = 64;
+const MSG_HELLO = 0x01, MSG_TELEMETRY = 0x10, MSG_TRACK_INFO = 0x11;
+const F_PIT = 1, F_INPIT = 2, F_INVALID = 4, F_ENGINE = 8, F_IGN = 16;
+
+function crc16(bytes) {
+  let crc = 0xFFFF;
+  for (const b of bytes) {
+    crc ^= b << 8;
+    for (let i = 0; i < 8; i++) crc = (crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1) & 0xFFFF;
+  }
+  return crc;
+}
+function encodeFrame(type, payload) {
+  const body = new Uint8Array(2 + payload.length);
+  body[0] = type; body[1] = payload.length; body.set(payload, 2);
+  const crc = crc16(body);
+  const f = new Uint8Array(3 + payload.length + 2);
+  f[0] = SOF; f.set(body, 1);
+  f[f.length - 2] = crc & 0xFF; f[f.length - 1] = crc >> 8;
+  return f;
+}
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.trunc(v)));
+function encodeTelemetry(t) {
+  const p = new Uint8Array(37), d = new DataView(p.buffer);
+  d.setUint32(0, clamp(t.current_lap_ms, 0, 0xFFFFFFFF), true);
+  d.setUint32(4, clamp(t.last_lap_ms, 0, 0xFFFFFFFF), true);
+  d.setUint32(8, clamp(t.best_lap_ms, 0, 0xFFFFFFFF), true);
+  d.setUint32(12, clamp(t.last_pit_ms, 0, 0xFFFFFFFF), true);
+  d.setInt32(16, clamp(t.delta_ms, -0x80000000, 0x7FFFFFFF), true);
+  d.setUint16(20, clamp(t.lap_number, 0, 0xFFFF), true);
+  d.setUint8(22, clamp(t.position, 0, 255));
+  d.setInt8(23, clamp(t.gear, -1, 127));
+  d.setUint16(24, clamp(t.speed_kmh, 0, 0xFFFF), true);
+  d.setUint16(26, clamp(t.fuel_laps_x10, 0, 0xFFFF), true);
+  d.setUint16(28, clamp(t.track_pos, 0, 10000), true);
+  d.setInt16(30, clamp(t.air_temp_x10, -0x8000, 0x7FFF), true);
+  d.setInt16(32, clamp(t.track_temp_x10, -0x8000, 0x7FFF), true);
+  d.setUint16(34, t.flags & 0xFFFF, true);
+  d.setUint8(36, t.session & 0xFF);
+  return encodeFrame(MSG_TELEMETRY, p);
+}
+function decodeTelemetry(p) {
+  if (p.length < 37) return null;
+  const d = new DataView(p.buffer, p.byteOffset, p.length);
+  const s = d.getUint8(36);
+  return {
+    current_lap_ms: d.getUint32(0, true), last_lap_ms: d.getUint32(4, true),
+    best_lap_ms: d.getUint32(8, true), last_pit_ms: d.getUint32(12, true),
+    delta_ms: d.getInt32(16, true), lap_number: d.getUint16(20, true),
+    position: d.getUint8(22), gear: d.getInt8(23), speed_kmh: d.getUint16(24, true),
+    fuel_laps_x10: d.getUint16(26, true), track_pos: d.getUint16(28, true),
+    air_temp_x10: d.getInt16(30, true), track_temp_x10: d.getInt16(32, true),
+    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0,
+  };
+}
+class FrameParser {
+  constructor() { this.buf = []; this.crcErrors = 0; }
+  push(b) { if (this.buf.length === 0 && b !== SOF) return; this.buf.push(b); }
+  next() {
+    const b = this.buf;
+    while (b.length) {
+      if (b[0] !== SOF) { this.drop(); continue; }
+      if (b.length < 3) return null;
+      const len = b[2];
+      if (len > MAX_PAYLOAD) { this.drop(); continue; }
+      const total = 5 + len;
+      if (b.length < total) return null;
+      const want = b[3 + len] | (b[4 + len] << 8);
+      if (crc16(b.slice(1, 3 + len)) !== want) { this.crcErrors++; this.drop(); continue; }
+      const frame = { type: b[1], payload: Uint8Array.from(b.slice(3, 3 + len)) };
+      b.splice(0, total);
+      return frame;
+    }
+    return null;
+  }
+  drop() { let i = 1; while (i < this.buf.length && this.buf[i] !== SOF) i++; this.buf.splice(0, i); }
+}
+
+// ---------------------------------------------------------------------------
+// Screen manager (mirror of firmware/lib/core/src/screen_manager.cpp)
+// ---------------------------------------------------------------------------
+const SIGNAL_TIMEOUT = 2000, INVALID_OVERLAY = 2500;
+const PAGES = ["CurrentLap", "TrackData", "LapSummary"];
+class ScreenManager {
+  constructor() { this.page = 0; this.last = null; this.rx = 0; this.invalidSince = -1e9; }
+  onTelemetry(t, now) {
+    const wasInvalid = this.last && (this.last.flags & F_INVALID);
+    const newLap = this.last && t.lap_number !== this.last.lap_number;
+    if ((t.flags & F_INVALID) && (!wasInvalid || newLap)) this.invalidSince = now;
+    this.last = t; this.rx = now;
+  }
+  nextPage() { this.page = (this.page + 1) % PAGES.length; }
+  current(now) {
+    if (!this.last || now - this.rx > SIGNAL_TIMEOUT) return "NoSignal";
+    if (now - this.invalidSince < INVALID_OVERLAY) return "LapInvalidated";
+    if (this.last.flags & F_PIT) return "PitLimiter";
+    if (!(this.last.flags & F_ENGINE)) return "EngineOff";
+    return PAGES[this.page];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Formatting (mirror of firmware/lib/core/src/format.cpp)
+// ---------------------------------------------------------------------------
+const pad = (n, w) => String(n).padStart(w, "0");
+function fmtLap(ms, dec = 1) {
+  if (!ms) return ["-:--.-", "-:--.--", "-:--.---"][dec - 1];
+  const div = [100, 10, 1][dec - 1];
+  return `${Math.floor(ms / 60000)}:${pad(Math.floor(ms / 1000) % 60, 2)}.${pad(Math.floor((ms % 1000) / div), dec)}`;
+}
+function fmtDelta(ms) {
+  const v = Math.max(-99990, Math.min(99990, ms)), a = Math.abs(v);
+  return `${v < 0 ? "-" : "+"}${Math.floor(a / 1000)}.${pad(Math.floor((a % 1000) / 10), 2)}`;
+}
+const fmtFuel = x => x === 0xFFFF ? "--.- LAPS" : `${Math.floor(x / 10)}.${x % 10} LAPS`;
+const fmtGear = g => g < 0 ? "R" : g === 0 ? "N" : String(g);
+const fmtTemp = x => `${x < 0 ? "-" : ""}${Math.floor(Math.abs(x) / 10)}.${Math.abs(x) % 10}`;
+const SESSIONS = ["", "PRACTICE", "QUALIFYING", "RACE", "HOTLAP"];
+
+// ---------------------------------------------------------------------------
+// Demo telemetry source (mirror of bridge/src/rigdash/sources/demo.py)
+// ---------------------------------------------------------------------------
+const TRACK = "Demo Ring";
+const FUEL_START = 12.0;
+const demo = {
+  lapStart: 0, target: 88200, lap: 1, last: 0, best: 0, invalid: false,
+  fuel: FUEL_START, lastPit: 0, pitEnter: null,
+  newLap(now) {
+    this.lapStart = now;
+    this.target = 88200 + Math.round((Math.random() - 0.5) * 3000);
+    this.invalid = false;
+  },
+  finish(now) {
+    this.last = now - this.lapStart;
+    if (!this.invalid && (!this.best || this.last < this.best)) this.best = this.last;
+    this.lap++;
+    this.fuel = Math.max(0, this.fuel - 1);
+    this.newLap(now);
+  },
+  poll(now, ui) {
+    if (now - this.lapStart >= this.target) this.finish(this.lapStart + this.target);
+    if (ui.pit && this.pitEnter === null) this.pitEnter = now;
+    if (!ui.pit && this.pitEnter !== null) { this.lastPit = now - this.pitEnter; this.pitEnter = null; }
+    const cur = now - this.lapStart, fr = cur / this.target;
+    let flags = F_IGN;
+    if (ui.engine) flags |= F_ENGINE;
+    if (ui.pit) flags |= F_PIT | F_INPIT;
+    if (this.invalid) flags |= F_INVALID;
+    const moving = ui.engine && !ui.pit;
+    return {
+      current_lap_ms: cur, last_lap_ms: this.last, best_lap_ms: this.best, last_pit_ms: this.lastPit,
+      delta_ms: this.best ? Math.round(cur - fr * this.best) : 0, lap_number: this.lap, position: 1,
+      gear: !ui.engine ? 0 : ui.pit ? 2 : 1 + Math.floor(fr * 50) % 6,
+      speed_kmh: !ui.engine ? 0 : ui.pit ? 60 : 120 + Math.floor(Math.abs(Math.sin(fr * 18)) * 140),
+      fuel_laps_x10: Math.round(this.fuel * 10), track_pos: Math.floor(fr * 10000),
+      air_temp_x10: 261, track_temp_x10: 372, flags, session: 1,
+      _moving: moving,
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Renderer — canvas primitives similar to what LovyanGFX offers on the ESP32
+// ---------------------------------------------------------------------------
+const W = 640, H = 288;
+const cv = document.getElementById("screen");
+const g = cv.getContext("2d");
+function fitCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  cv.width = W * dpr; cv.height = H * dpr;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+fitCanvas();
+addEventListener("resize", fitCanvas);
+
+const C = { bg: "#06070a", white: "#f4f6fa", grey: "#8a93a6", blue: "#3f8cff", lime: "#b9ef4f", red: "#ff4a1c", dark: "#11141b" };
+const DF = "Barlow Condensed, Arial Narrow, sans-serif";
+function font(weight, size) { g.font = `${weight} ${size}px ${DF}`; }
+function text(s, x, y, color, align = "left") { g.fillStyle = color; g.textAlign = align; g.fillText(s, x, y); }
+function fitText(s, x, y, maxW, weight, size, color, align = "left") {
+  font(weight, size);
+  const w = g.measureText(s).width;
+  if (w > maxW) font(weight, Math.floor(size * maxW / w));
+  text(s, x, y, color, align);
+}
+function rect(x, y, w, h, color) { g.fillStyle = color; g.fillRect(x, y, w, h); }
+function chip(x, y, w, h, bg, fg, label) {
+  rect(x, y, w, h, bg); font(700, 22); text(label, x + w / 2, y + h - 8, fg, "center");
+}
+function fuelIcon(x, y, color) {
+  g.fillStyle = color; g.fillRect(x, y, 10, 15); g.fillRect(x + 11, y + 4, 3, 9);
+  g.fillStyle = C.blue; g.fillRect(x + 2, y + 2, 6, 4);
+}
+function topBar(t, title) {
+  font(600, 22); g.letterSpacing = "1px";
+  text(title, 20, 34, C.white);
+  g.letterSpacing = "0px";
+  font(700, 22); text(SESSIONS[t.session] || "", 300, 34, C.white);
+  chip(416, 12, 78, 30, C.white, "#000", t.position ? `POS ${t.position}` : "POS -");
+  rect(494, 12, 132, 30, C.blue);
+  fuelIcon(504, 20, "#06122e");
+  font(700, 22); text(fmtFuel(t.fuel_laps_x10), 522, 34, "#06122e");
+}
+
+// Closed track outline used by the mini map.
+const trackPts = (() => {
+  const pts = [];
+  for (let i = 0; i <= 200; i++) {
+    const a = (i / 200) * Math.PI * 2;
+    const r = 1 + 0.28 * Math.sin(2 * a) + 0.12 * Math.cos(3 * a + 0.6);
+    pts.push([Math.cos(a) * r, Math.sin(a) * r * 0.62]);
+  }
+  return pts;
+})();
+function trackXY(frac, bx, by, bw, bh) {
+  const i = Math.floor(frac * (trackPts.length - 1));
+  const [x, y] = trackPts[Math.min(i, trackPts.length - 1)];
+  return [bx + bw / 2 + x * bw * 0.36, by + bh / 2 + y * bh * 0.62];
+}
+
+const screens = {
+  NoSignal(t, now) {
+    font(700, 40); text("WAITING FOR TELEMETRY", W / 2, 150, C.grey, "center");
+    font(500, 20); text("Start the bridge on your PC · USB", W / 2, 186, "#5d6578", "center");
+    if (Math.floor(now / 500) % 2) { g.fillStyle = C.blue; g.beginPath(); g.arc(W / 2, 222, 6, 0, 7); g.fill(); }
+  },
+  CurrentLap(t) {
+    topBar(t, "CURRENT LAP");
+    fitText(fmtLap(t.current_lap_ms), 16, 252, 380, 800, 168, C.white);
+    rect(416, 104, 210, 34, C.white);
+    font(700, 26); text("LAP", 426, 130, "#000");
+    font(800, 104); text(pad(t.lap_number, 2), 424, 252, C.white);
+  },
+  TrackData(t) {
+    topBar(t, "TRACK DATA");
+    fitText(TRACK.toUpperCase(), 20, 78, 380, 700, 28, C.white);
+    // Mini map
+    const bx = 20, by = 92, bw = 300, bh = 180;
+    g.strokeStyle = "#2a3040"; g.lineWidth = 2; g.strokeRect(bx, by, bw, bh);
+    g.strokeStyle = C.white; g.lineWidth = 6; g.lineJoin = "round"; g.beginPath();
+    trackPts.forEach((p, i) => {
+      const [x, y] = trackXY(i / (trackPts.length - 1), bx, by, bw, bh);
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    });
+    g.stroke();
+    const [cx, cy] = trackXY(t.track_pos / 10000, bx, by, bw, bh);
+    g.fillStyle = C.lime; g.beginPath(); g.arc(cx, cy, 9, 0, 7); g.fill();
+    g.strokeStyle = "#000"; g.lineWidth = 2; g.stroke();
+    // Fuel
+    const pct = t.fuel_laps_x10 === 0xFFFF ? 0 : Math.round((t.fuel_laps_x10 / 10) / FUEL_START * 100);
+    font(600, 20); text("FUEL", 344, 92, C.grey);
+    font(800, 34); text(`${pct}%`, 626, 96, C.white, "right");
+    rect(344, 104, 282, 12, "#222838"); rect(344, 104, 282 * pct / 100, 12, C.blue);
+    // Weather
+    rect(344, 140, 282, 30, C.white);
+    font(700, 22); text("WEATHER", 354, 163, "#000");
+    font(500, 18); text("AIR", 344, 200, C.grey); text("TRACK", 490, 200, C.grey);
+    font(800, 52); text(`${fmtTemp(t.air_temp_x10)}°`, 344, 254, C.white);
+    text(`${fmtTemp(t.track_temp_x10)}°`, 490, 254, C.white);
+  },
+  LapSummary(t) {
+    topBar(t, "LAP SUMMARY");
+    const rows = [["LAST", fmtLap(t.last_lap_ms, 3), C.white], ["BEST", fmtLap(t.best_lap_ms, 3), C.lime]];
+    rows.forEach(([k, v, c], i) => {
+      const y = 112 + i * 78;
+      font(600, 24); text(k, 20, y, C.grey);
+      font(800, 70); text(v, 20, y + 58, c);
+    });
+    const dc = !t.best_lap_ms ? C.grey : t.delta_ms <= 0 ? C.lime : C.red;
+    rect(416, 104, 210, 34, C.white);
+    font(700, 26); text("DELTA", 426, 130, "#000");
+    fitText(t.best_lap_ms ? fmtDelta(t.delta_ms) : "--.--", 424, 236, 202, 800, 92, dc);
+  },
+  PitLimiter(t) {
+    rect(0, 0, W, 126, C.lime);
+    font(800, 78); text("PIT LIMITER ON", W / 2, 96, "#0b1300", "center");
+    const cols = [["GEAR", fmtGear(t.gear)], ["SPEED", String(t.speed_kmh)],
+                  ["POSITION", t.position ? String(t.position) : "-"], ["LAST PIT STOP", fmtLap(t.last_pit_ms)]];
+    const cw = [120, 140, 150, 206];
+    let x = 8;
+    cols.forEach(([k, v], i) => {
+      rect(x, 140, cw[i] - 8, 32, C.white);
+      font(700, 22); text(k, x + (cw[i] - 8) / 2, 164, "#000", "center");
+      fitText(v, x + (cw[i] - 8) / 2, 262, cw[i] - 14, 800, 82, C.white, "center");
+      x += cw[i];
+    });
+  },
+  LapInvalidated() {
+    const grd = g.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, 380);
+    grd.addColorStop(0, "#3a0b04"); grd.addColorStop(1, C.bg);
+    g.fillStyle = grd; g.fillRect(0, 0, W, H);
+    // Warning triangle
+    g.fillStyle = C.red; g.beginPath(); g.moveTo(W / 2, 46); g.lineTo(W / 2 + 34, 106); g.lineTo(W / 2 - 34, 106); g.closePath(); g.fill();
+    font(800, 44); text("!", W / 2, 102, "#1a0400", "center");
+    font(800, 92); text("LAP INVALIDATED", W / 2, 206, C.red, "center");
+  },
+  EngineOff() {
+    // Engine outline icon
+    g.strokeStyle = C.white; g.lineWidth = 5; g.lineJoin = "round";
+    g.beginPath();
+    g.moveTo(56, 128); g.lineTo(92, 128); g.lineTo(100, 118); g.lineTo(140, 118); g.lineTo(150, 132);
+    g.lineTo(170, 132); g.lineTo(170, 120); g.lineTo(182, 120); g.lineTo(182, 176); g.lineTo(170, 176);
+    g.lineTo(170, 164); g.lineTo(150, 164); g.lineTo(138, 182); g.lineTo(88, 182); g.lineTo(76, 166);
+    g.lineTo(56, 166); g.closePath(); g.stroke();
+    g.beginPath(); g.moveTo(40, 136); g.lineTo(40, 160); g.moveTo(40, 148); g.lineTo(56, 148); g.stroke();
+    font(800, 72); text("ENGINE", 206, 174, C.white);
+    rect(436, 0, 204, H, "#d23a22");
+    font(800, 92); text("OFF", 538, 178, "#2a0400", "center");
+  },
+};
+
+function render(name, t, now) {
+  g.fillStyle = C.bg; g.fillRect(0, 0, W, H);
+  screens[name](t || {}, now);
+}
+
+// ---------------------------------------------------------------------------
+// Wiring: demo source → encode → (wire) → parse → decode → screen manager → render
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const ui = { pit: false, engine: true, usb: true, noise: false };
+const parser = new FrameParser();
+const sm = new ScreenManager();
+let latest = null, frames = 0, lastSend = 0, lastHello = -1e9, lastHex = null;
+
+const LED = { blue: "on-blue", green: "on-green", red: "on-red" };
+function setLeds(screen, now) {
+  let cls = "";
+  if (screen === "PitLimiter") cls = LED.green;
+  else if (screen === "LapInvalidated") cls = Math.floor(now / 160) % 2 ? LED.red : "";
+  else if (screen !== "NoSignal" && screen !== "EngineOff") cls = LED.blue;
+  for (const id of ["led1", "led2"]) $(id).className = "led " + cls;
+}
+
+const SCREEN_LABEL = {
+  NoSignal: "Waiting for telemetry", CurrentLap: "Current lap", TrackData: "Track data",
+  LapSummary: "Lap summary", PitLimiter: "Pit limiter", LapInvalidated: "Lap invalidated", EngineOff: "Engine off",
+};
+
+function wire(bytes) {
+  if (ui.noise && Math.random() < 0.25) {
+    bytes = Uint8Array.from(bytes);
+    bytes[3 + Math.floor(Math.random() * (bytes.length - 3))] ^= 0x40;  // flip a bit
+  }
+  for (const b of bytes) parser.push(b);
+  return bytes;
+}
+
+function updateReadout(t) {
+  if (!t) return;
+  const items = [
+    ["Lap time", fmtLap(t.current_lap_ms, 3)], ["Lap", t.lap_number], ["Last", fmtLap(t.last_lap_ms, 3)],
+    ["Best", fmtLap(t.best_lap_ms, 3)], ["Delta", t.best_lap_ms ? fmtDelta(t.delta_ms) : "—"],
+    ["Gear", fmtGear(t.gear)], ["Speed", `${t.speed_kmh} km/h`], ["Fuel", fmtFuel(t.fuel_laps_x10)],
+    ["Track pos", `${(t.track_pos / 100).toFixed(1)} %`], ["Flags", "0b" + t.flags.toString(2).padStart(5, "0")],
+  ];
+  $("readout").innerHTML = items.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+}
+
+function tick() {
+  const now = performance.now();
+  if (now - lastSend >= 33) {
+    lastSend = now;
+    if (ui.usb) {
+      if (now - lastHello > 2000) {
+        lastHello = now;
+        wire(encodeFrame(MSG_HELLO, Uint8Array.of(1)));
+        wire(encodeFrame(MSG_TRACK_INFO, new TextEncoder().encode(TRACK)));
+      }
+      lastHex = wire(encodeTelemetry(demo.poll(now, ui)));
+    } else {
+      demo.poll(now, ui);
+    }
+    let f;
+    while ((f = parser.next())) {
+      if (f.type === MSG_TELEMETRY) {
+        const t = decodeTelemetry(f.payload);
+        if (t) { latest = t; sm.onTelemetry(t, now); frames++; }
+      }
+    }
+  }
+  const screen = sm.current(now);
+  render(screen, latest, now);
+  setLeds(screen, now);
+  $("screenName").textContent = SCREEN_LABEL[screen];
+  $("frameCount").textContent = frames;
+  $("crcErrors").textContent = parser.crcErrors;
+  requestAnimationFrame(tick);
+}
+
+let readoutTimer = setInterval(() => {
+  updateReadout(latest);
+  if (lastHex) {
+    const h = Array.from(lastHex, b => b.toString(16).padStart(2, "0").toUpperCase());
+    $("hex").innerHTML = `<b>${h.slice(0, 3).join(" ")}</b> ${h.slice(3, -2).join(" ")} <b>${h.slice(-2).join(" ")}</b>`;
+  }
+}, 200);
+
+$("btnPage").addEventListener("click", () => sm.nextPage());
+$("btnInvalid").addEventListener("click", () => { demo.invalid = true; });
+$("btnFinish").addEventListener("click", () => { demo.finish(performance.now()); });
+$("tPit").addEventListener("change", e => { ui.pit = e.target.checked; });
+$("tEngine").addEventListener("change", e => { ui.engine = e.target.checked; });
+$("tUsb").addEventListener("change", e => { ui.usb = e.target.checked; });
+$("tNoise").addEventListener("change", e => { ui.noise = e.target.checked; });
+
+demo.lapStart = performance.now() - 61500;  // open mid-lap so the first frame looks realistic
+demo.target = 88200;
+demo.last = 89012; demo.best = 87950; demo.lap = 3; demo.fuel = 9.0;
+(document.fonts ? document.fonts.load(`800 40px "Barlow Condensed"`) : Promise.resolve())
+  .catch(() => {}).finally(() => requestAnimationFrame(tick));
+</script>
