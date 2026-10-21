@@ -68,4 +68,8 @@ void stripFor(Screen screen, const State& s, AlertKind alert, uint32_t now_ms,
               const StripLayout& layout, Rgb* out);
 Rgb alertColour(AlertKind kind);
 
+// Brightness (0..255) that keeps `n` LEDs showing `px` under `max_ma`, at most
+// `wanted`. Assumes WS2812B: ~20 mA per colour channel at full, ~1 mA idle.
+uint8_t limitBrightness(const Rgb* px, uint16_t n, uint8_t wanted, uint16_t max_ma);
+
 }  // namespace rigdash

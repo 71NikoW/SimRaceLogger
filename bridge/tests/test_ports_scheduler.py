@@ -1,7 +1,7 @@
 from types import SimpleNamespace as P
 
 from rigdash.model import Config, Snapshot, Telemetry, Timing, Weather
-from rigdash.ports import find_display_port
+from rigdash.ports import find_display_port, find_display_ports
 from rigdash.protocol import (
     MSG_CONFIG, MSG_HELLO, MSG_TELEMETRY, MSG_TIMING, MSG_TRACK_INFO, MSG_WEATHER, FrameParser,
 )
@@ -13,6 +13,13 @@ def test_port_prefers_espressif_native_usb():
     assert find_display_port(ports) == "COM9"
     assert find_display_port(ports[:1] + ports[2:]) == "COM3"
     assert find_display_port([P(device="COM1", vid=0x8087)]) is None
+
+
+def test_all_devices_found():
+    ports = [P(device="COM9", vid=0x303A), P(device="COM4", vid=0x303A), P(device="COM3", vid=0x1A86)]
+    assert find_display_ports(ports) == ["COM4", "COM9"]  # native USB only when present
+    assert find_display_ports(ports[2:]) == ["COM3"]
+    assert find_display_ports([]) == []
 
 
 def types(frames):

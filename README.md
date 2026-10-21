@@ -19,7 +19,7 @@ Sim  ──►  PC bridge (Python)  ──USB serial──►  ESP32-S3 display
 
 | Path               | What                                                         |
 |--------------------|--------------------------------------------------------------|
-| `docs/`            | [Concept](docs/CONCEPT.md), [protocol](docs/PROTOCOL.md), [build guide](docs/BUILD.md), [backlog](docs/BACKLOG.md) |
+| `docs/`            | [Concept](docs/CONCEPT.md), [protocol](docs/PROTOCOL.md), [build guide](docs/BUILD.md), [flag panel & button box](docs/DEVICES.md), [backlog](docs/BACKLOG.md) |
 | `bridge/`          | PC side: telemetry sources → serial frames (`rigdash-bridge`) |
 | `firmware/lib/core`| Hardware-independent C++: protocol parser, formatting, screen manager |
 | `firmware/src`     | ESP32-S3 board layer (PlatformIO, Arduino framework)         |

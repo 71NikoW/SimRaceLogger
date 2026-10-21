@@ -217,3 +217,19 @@ TEST(strip_custom_layouts) {
     CHECK_EQ(o.size(), 1u);
   }
 }
+
+TEST(brightness_limiter) {
+  std::vector<Rgb> px(256, rgb::kWhite);
+  // 256 × 60 mA = 15 A at full: must be throttled hard under 450 mA.
+  const uint8_t b = limitBrightness(px.data(), 256, 255, 450);
+  CHECK(b > 0 && b < 10);
+  const uint32_t ma = 256 + 256u * 3u * 20u * b / 255u;
+  CHECK(ma <= 450);
+  // A few LEDs fit easily.
+  std::vector<Rgb> few(20, rgb::kOff);
+  few[0] = rgb::kRed;
+  CHECK_EQ(limitBrightness(few.data(), 20, 200, 450), 200);
+  CHECK_EQ(limitBrightness(few.data(), 20, 200, 10), 0);  // budget below idle current
+  std::vector<Rgb> dark(256, rgb::kOff);
+  CHECK_EQ(limitBrightness(dark.data(), 256, 255, 450), 255);
+}

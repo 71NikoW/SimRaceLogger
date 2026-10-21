@@ -207,4 +207,16 @@ void stripFor(Screen screen, const State& s, AlertKind alert, uint32_t now, cons
   }
 }
 
+uint8_t limitBrightness(const Rgb* px, uint16_t n, uint8_t wanted, uint16_t max_ma) {
+  // Sum of channel values at full brightness, in units of 1/255 × 20 mA.
+  uint32_t sum = 0;
+  for (uint16_t i = 0; i < n; ++i) sum += static_cast<uint32_t>(px[i].r) + px[i].g + px[i].b;
+  const uint32_t idle_ma = n;  // driver chips
+  if (max_ma <= idle_ma) return 0;
+  const uint64_t budget = static_cast<uint64_t>(max_ma - idle_ma) * 255u * 255u / 20u;
+  const uint64_t need = static_cast<uint64_t>(sum) * wanted;
+  if (need <= budget) return wanted;
+  return static_cast<uint8_t>(budget / sum);
+}
+
 }  // namespace rigdash

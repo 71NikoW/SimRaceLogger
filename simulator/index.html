@@ -240,6 +240,19 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
   overflow: auto;
 }
 .hex b { color: var(--accent); font-weight: 500; }
+.extras { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+@media (max-width: 640px) { .extras { grid-template-columns: minmax(0, 1fr); } }
+.flagbox { background: #111; padding: 10px; border-radius: 10px; width: max-content; box-shadow: inset 0 0 0 2px #2a2f3a; }
+#flagPanel { width: 160px; height: 160px; border-radius: 2px; }
+.bbox {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 14px;
+  border-radius: 12px; background: repeating-linear-gradient(135deg, #1b1f27 0 2px, #161a21 2px 5px);
+  max-width: 420px;
+}
+.bb { aspect-ratio: 1; border-radius: 50%; border: 3px solid #2b313d; background: #0d1016; color: #8a93a6;
+  font: 700 10px/1 var(--font-display); display: grid; place-items: center; padding: 0; cursor: pointer; }
+.bb.toggle-sw { border-radius: 8px; }
+.bb.enc { border-radius: 50%; background: radial-gradient(circle at 50% 35%, #3a404c, #12151b); border-color: #444b58; }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { .switch i, .switch i::after { transition: none; } }
@@ -267,6 +280,19 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
           <span>Screen: <b id="screenName">—</b></span>
           <span>Frames: <b id="frameCount">0</b></span>
           <span>CRC errors: <b id="crcErrors">0</b></span>
+        </div>
+      </section>
+
+      <section class="panel extras" aria-label="Flag panel and button box">
+        <div class="group">
+          <div class="label">Flag panel · 16×16 LEDs</div>
+          <div class="flagbox"><canvas id="flagPanel" width="160" height="160" aria-label="Flag panel"></canvas></div>
+          <label class="toggle" for="tDeltaIdle"><span>Show delta colour when no flag</span><span class="switch"><input type="checkbox" id="tDeltaIdle"><i></i></span></label>
+        </div>
+        <div class="group">
+          <div class="label">Button box</div>
+          <div class="bbox" id="buttonBox" aria-label="Button box"></div>
+          <p class="note">Buttons light up from telemetry: starter blinks red with ignition on and engine off, pit limiter blinks green, the flag button shows the flag. Click to press.</p>
         </div>
       </section>
 
@@ -1821,6 +1847,107 @@ function updateLeds(screen, now, alertKind) {
   Lf.forEach((c, i) => paint(stripEls.left[i], c));
   Rt.forEach((c, i) => paint(stripEls.right[i], c));
 }
+// Flag panel (mirror of firmware/lib/core/src/flag_panel.cpp)
+const FP = { w: 16, h: 16, have: false, last: null, rx: 0, greenSince: -1e9, deltaIdle: false };
+function fpOnTelemetry(t, now) {
+  if (t.race_flag === 1 && (!FP.have || FP.last.race_flag !== 1)) FP.greenSince = now;
+  FP.last = t; FP.have = true; FP.rx = now;
+}
+function fpMode(now) {
+  if (!FP.have || now - FP.rx > SIGNAL_TIMEOUT) return "NoSignal";
+  const f = FP.last.race_flag;
+  if (f === 1) { if (now - FP.greenSince < 3000) return "Flag"; }
+  else if (f) return "Flag";
+  if (FP.last.flags & F_PIT) return "PitLimiter";
+  if (FP.deltaIdle && FP.last.best_lap_ms) return "Delta";
+  return "Off";
+}
+const GLYPHS = { S: [7, 4, 7, 1, 7], C: [7, 4, 4, 4, 7], V: [5, 5, 5, 5, 2] };
+function fpRender(now) {
+  const { w, h } = FP, px = Array(w * h).fill("off"), b = blinkOn(now);
+  const fill = c => px.fill(c);
+  const frame = c => { for (let x = 0; x < w; x++) { px[x] = c; px[(h - 1) * w + x] = c; } for (let y = 0; y < h; y++) { px[y * w] = c; px[y * w + w - 1] = c; } };
+  const text = (s, c) => {
+    const n = s.length, sc = (n * 4 - 1) * 2 <= w && h >= 10 ? 2 : 1, tw = (n * 4 - 1) * sc, th = 5 * sc;
+    const x0 = Math.floor((w - tw) / 2), y0 = Math.floor((h - th) / 2);
+    [...s].forEach((ch, i) => GLYPHS[ch].forEach((row, r) => { for (let col = 0; col < 3; col++) if ((row >> (2 - col)) & 1)
+      for (let dy = 0; dy < sc; dy++) for (let dx = 0; dx < sc; dx++) px[(y0 + r * sc + dy) * w + x0 + (i * 4 + col) * sc + dx] = c; }));
+  };
+  const m = fpMode(now);
+  if (m === "NoSignal") { px[Math.floor(now / 150) % (w * h)] = "dimBlue"; return px; }
+  if (m === "Off") return px;
+  if (m === "PitLimiter") { if (b) frame("green"); return px; }
+  if (m === "Delta") { fill(FP.last.delta_ms <= 0 ? "dimGreen" : "dimRed"); return px; }
+  switch (FP.last.race_flag) {
+    case 1: fill("green"); break;
+    case 2: if (b) fill("yellow"); break;
+    case 7: fill("red"); break;
+    case 4: fill("white"); break;
+    case 3: if (b) { fill("blue"); for (let y = 0; y < h; y++) { const x = Math.floor((h - 1 - y) * w / h); for (let k = -1; k <= 1; k++) if (x + k >= 0 && x + k < w) px[y * w + x + k] = "yellow"; } } break;
+    case 5: if (b) frame("white"); break;
+    case 6: { const sq = w >= 8 ? w / 4 : 1; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px[y * w + x] = (((Math.floor(x / sq) + Math.floor(y / sq)) & 1) === (b ? 1 : 0)) ? "white" : "off"; break; }
+    case 8: case 9: fill(b ? "yellow" : "off"); text(FP.last.race_flag === 8 ? "SC" : "VSC", b ? "off" : "yellow"); break;
+  }
+  return px;
+}
+const fpCtx = document.getElementById("flagPanel").getContext("2d");
+function fpDraw(now) {
+  const px = fpRender(now), cell = 10;
+  fpCtx.fillStyle = "#050608"; fpCtx.fillRect(0, 0, 160, 160);
+  px.forEach((c, i) => {
+    const x = (i % 16) * cell, y = Math.floor(i / 16) * cell;
+    fpCtx.fillStyle = RGB[c] || "#141821";
+    fpCtx.beginPath(); fpCtx.arc(x + 5, y + 5, 3.6, 0, 7); fpCtx.fill();
+  });
+}
+
+// Button box (mirror of buttonLed in firmware/lib/core/src/buttonbox.cpp)
+const BB = [
+  ["START", "Starter"], ["PIT", "PitLimiter"], ["RADIO", "Generic"], ["FLASH", "Generic"], ["WIPER", "Generic"], ["FLAG", "Flag"],
+  ["MFD", "Generic"], ["CAM", "Generic"], ["DRS", "Generic"], ["HORN", "Generic"], ["BOX", "Generic"], ["LIGHT", "Generic"],
+];
+function buttonLed(role, pressed, live, now) {
+  const t = S.t || { flags: 0, race_flag: 0 }, b = blinkOn(now);
+  const back = pressed ? "#b4b4b4" : "#2a2d33";
+  if (role === "Generic") return back;
+  if (role === "PitLimiter") return live && (t.flags & F_PIT) ? (b ? RGB.green : "#0d1016") : back;
+  if (role === "Ignition") return !live ? back : (t.flags & F_ENGINE) ? RGB.green : (t.flags & F_IGN) ? RGB.red : back;
+  if (role === "Starter") return live && (t.flags & F_IGN) && !(t.flags & F_ENGINE) ? (b ? RGB.red : "#0d1016") : back;
+  if (role === "Flag") {
+    if (!live) return back;
+    const f = t.race_flag;
+    if (f === 2 || f === 8 || f === 9) return b ? RGB.yellow : "#0d1016";
+    if (f === 3) return b ? RGB.blue : "#0d1016";
+    if (f === 7 || f === 5) return RGB.red;
+    if (f === 4 || f === 6) return RGB.white;
+    if (f === 1) return RGB.dimGreen;
+    return back;
+  }
+  return "#0d1016";
+}
+const bbEls = [];
+const bbWrap = document.getElementById("buttonBox");
+BB.forEach(([name, role]) => {
+  const el = document.createElement("button"); el.type = "button"; el.className = "bb"; el.textContent = name;
+  el.dataset.role = role; bbWrap.appendChild(el); bbEls.push(el);
+  el.addEventListener("pointerdown", () => { el.dataset.pressed = "1"; });
+  el.addEventListener("pointerup", () => { el.dataset.pressed = ""; });
+  el.addEventListener("pointerleave", () => { el.dataset.pressed = ""; });
+});
+const ign = document.createElement("button"); ign.type = "button"; ign.className = "bb toggle-sw"; ign.textContent = "IGN"; ign.dataset.role = "Ignition";
+ign.title = "Ignition toggle"; bbWrap.appendChild(ign); bbEls.push(ign);
+ign.addEventListener("click", () => { $("tEngine").click(); });
+for (const n of ["ABS", "TC", "MAP", "BB"]) { const e = document.createElement("div"); e.className = "bb enc"; e.textContent = n; bbWrap.appendChild(e); }
+function bbDraw(now) {
+  const live = !!S.t && sm.current(now, false) !== "NoSignal";
+  for (const el of bbEls) {
+    const c = buttonLed(el.dataset.role, el.dataset.pressed === "1", live, now);
+    el.style.borderColor = c; el.style.boxShadow = c.length === 7 && c !== "#2a2d33" && c !== "#0d1016" ? `0 0 10px ${c}` : "";
+    el.style.color = c === "#2a2d33" || c === "#0d1016" ? "#8a93a6" : "#fff";
+  }
+}
+$("tDeltaIdle").addEventListener("change", e => { FP.deltaIdle = e.target.checked; });
+
 let mode = "spa", speed = 1, srcClock = 0, lastTick = performance.now();
 
 const SCREEN_LABEL = { NoSignal: "Waiting for telemetry", RaceFlag: "Race flag", LapInvalidated: "Lap invalidated",
@@ -1836,7 +1963,7 @@ function tick() {
     let f;
     while ((f = parser.next())) {
       const type = applyFrame(f, S);
-      if (type === MSG.TELEMETRY) { sm.onTelemetry(S.t, now); frames++; }
+      if (type === MSG.TELEMETRY) { sm.onTelemetry(S.t, now); fpOnTelemetry(S.t, now); frames++; }
       if (type === MSG.CONFIG) sm.setPageMask(S.config.page_mask);
       if (type) alerts.update(S, now);
     }
@@ -1846,6 +1973,8 @@ function tick() {
   const screen = sm.current(now, !!a);
   render(screen, now);
   updateLeds(screen, now, a && a.kind);
+  fpDraw(now);
+  bbDraw(now);
   $("cornerWrap").hidden = mode !== "spa";
   if (mode === "spa") $("corner").textContent = `Lap ${Math.min(spa.lap, SPA.script.laps)}/${SPA.script.laps} · ${spa.corner || "—"}`;
   $("screenName").textContent = SCREEN_LABEL[screen];

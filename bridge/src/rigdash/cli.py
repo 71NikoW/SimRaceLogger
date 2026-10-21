@@ -43,7 +43,9 @@ def parse_units(value: str) -> Units:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="rigdash-bridge")
     p.add_argument("--source", choices=sorted(SOURCES), default="demo")
-    p.add_argument("--port", help="serial port (COM5, /dev/ttyACM0) or 'auto'")
+    p.add_argument("--port", action="append",
+                   help="serial port (COM5, /dev/ttyACM0) or 'auto' for every connected device; "
+                        "repeat for several devices (display, flag panel, button box)")
     p.add_argument("--baud", type=int, default=115200)
     p.add_argument("--rate", type=float, default=30.0, help="frames per second")
     p.add_argument("--dry-run", action="store_true", help="print frames as hex instead of sending")
@@ -68,16 +70,27 @@ def main(argv: list[str] | None = None) -> int:
         except ImportError:
             print("pyserial missing: pip install 'rigdash[serial]'", file=sys.stderr)
             return 2
-        port_name = args.port
-        if port_name == "auto":
-            from .ports import find_display_port
-            port_name = find_display_port()
-            if not port_name:
-                print("no display found; plug it in or pass --port", file=sys.stderr)
-                return 2
-            print(f"display on {port_name}", file=sys.stderr)
-        port = serial.Serial(port_name, args.baud, timeout=0)
-        write = port.write
+        names: list[str] = []
+        for name in args.port:
+            if name == "auto":
+                from .ports import find_display_ports
+                found = find_display_ports()
+                if not found:
+                    print("no device found; plug it in or pass --port", file=sys.stderr)
+                    return 2
+                names += found
+            else:
+                names.append(name)
+        names = list(dict.fromkeys(names))  # keep order, drop duplicates
+        print("sending to " + ", ".join(names), file=sys.stderr)
+        ports = [serial.Serial(n, args.baud, timeout=0, write_timeout=0) for n in names]
+
+        def write(frame: bytes) -> None:
+            for port in ports:
+                try:
+                    port.write(frame)
+                except serial.SerialTimeoutException:
+                    pass  # a device that can't keep up drops frames, not the others
 
     source = SOURCES[args.source]()
     config = Config(page_mask=args.pages, brightness=max(0, min(255, args.brightness)), units=args.units)

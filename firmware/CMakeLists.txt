@@ -11,7 +11,9 @@ add_library(rigdash_core
   lib/core/src/format.cpp
   lib/core/src/screen_manager.cpp
   lib/core/src/dash.cpp
-  lib/core/src/alerts.cpp)
+  lib/core/src/alerts.cpp
+  lib/core/src/flag_panel.cpp
+  lib/core/src/buttonbox.cpp)
 target_include_directories(rigdash_core PUBLIC lib/core/include)
 target_compile_options(rigdash_core PRIVATE -Wall -Wextra -Werror)
 
@@ -22,7 +24,9 @@ add_executable(core_tests
   test/test_screen_manager.cpp
   test/test_vectors.cpp
   test/test_dash.cpp
-  test/test_alerts.cpp)
+  test/test_alerts.cpp
+  test/test_flag_panel.cpp
+  test/test_buttonbox.cpp)
 target_link_libraries(core_tests rigdash_core)
 target_compile_options(core_tests PRIVATE -Wall -Wextra -Werror)
 target_compile_definitions(core_tests PRIVATE
@@ -38,3 +42,11 @@ target_include_directories(board_compile_check PRIVATE test/stubs)
 target_link_libraries(board_compile_check rigdash_core)
 target_compile_options(board_compile_check PRIVATE -Wall -Wextra -Werror)
 add_test(NAME board_compile_check COMMAND board_compile_check)
+
+foreach(device flagpanel buttonbox)
+  add_executable(${device}_compile_check src/${device}_main.cpp test/stubs/stubs.cpp)
+  target_include_directories(${device}_compile_check PRIVATE test/stubs)
+  target_link_libraries(${device}_compile_check rigdash_core)
+  target_compile_options(${device}_compile_check PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME ${device}_compile_check COMMAND ${device}_compile_check)
+endforeach()

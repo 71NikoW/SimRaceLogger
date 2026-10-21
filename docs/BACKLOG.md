@@ -36,7 +36,8 @@ Brainstorm, not yet prioritised. ✅ = done.
 - SimHub plugin as an alternative to the standalone bridge
 - ✅ Session logging to CSV (lap times, fuel, flags) — the "logger" part of the repo name
 - ✅ Auto-detect of the COM port (`--port auto`); tray app + game auto-detect still open
-- Multiple displays on one bridge (e.g. one for timing, one for car)
+- ✅ Several devices on one bridge (`--port auto` finds all)
+- ✅ Flag panel (16×16 LED matrix) and button box (USB gamepad with telemetry LEDs) — logic, tests, firmware; cases open
 
 ## Hardware & community
 - ✅ Parts list, wiring and build steps (docs/BUILD.md)
