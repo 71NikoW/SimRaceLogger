@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Parametric case for the Waveshare ESP32-S3-Touch-LCD-4.3 + LED bars.
 
-    pip install manifold3d trimesh
-    python3 hardware/case/build.py            # writes hardware/case/out/*.stl
+    pip install manifold3d trimesh cadquery-ocp
+    python3 hardware/case/build.py            # writes hardware/case/out/*.stl + *.step
 
 Parts (print the front face-down, no supports needed):
   case_front.stl     front plate + walls, display window, 20 LED windows
   case_back.stl      back lid with 1/4"-20 camera-thread nut pocket
-  diffuser_top.stl   1 mm light diffuser behind the 12 top LED windows
+  diffuser_top.stl   1 mm light diffuser, glued flush into the front over the 12 top LEDs
   diffuser_side.stl  same for one side (print 2)
   test_frame.stl     first 5 mm of the front only — quick test print to check
                      window, LED windows and fit before the full case
@@ -131,7 +131,8 @@ def front() -> Manifold:
     shell -= window
     shell -= box(WINDOW_W, WINDOW_H, t + 1, y=ACTIVE_CY, z=-0.5)
 
-    # LED windows + recess for the diffuser strips on the inside.
+    # LED windows + a 1 mm recess on the outside: the diffuser strips sit
+    # flush in the front (and the light separators behind stay attached).
     leds = led_positions()
     for kind, x, y in leds:
         w, h = LED_WIN if kind == "top" else LED_WIN[::-1]
@@ -140,8 +141,8 @@ def front() -> Manifold:
         xs = [p[1] for p in leds if p[0] == group]
         ys = [p[2] for p in leds if p[0] == group]
         w, h = LED_WIN if group == "top" else LED_WIN[::-1]
-        shell -= box(max(xs) - min(xs) + w + 2, max(ys) - min(ys) + h + 2, 1.0,
-                     (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2, PLATE - 1.0)
+        shell -= box(max(xs) - min(xs) + w + 2, max(ys) - min(ys) + h + 2, 1.0 + 0.5,
+                     (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2, -0.5)
 
     # Light separators between LEDs (stop 0.3 mm short of the PCB).
     rib_h = 1.3
@@ -198,6 +199,8 @@ def diffuser(n, pitch) -> Manifold:
 
 
 def export(m: Manifold, name: str) -> Path:
+    if len(m.decompose()) != 1:
+        raise SystemExit(f"{name}: {len(m.decompose())} separate bodies — something is floating")
     mesh = m.to_mesh()
     tm = trimesh.Trimesh(vertices=mesh.vert_properties[:, :3], faces=mesh.tri_verts, process=True)
     if not tm.is_watertight:
@@ -205,6 +208,51 @@ def export(m: Manifold, name: str) -> Path:
     OUT.mkdir(exist_ok=True)
     path = OUT / f"{name}.stl"
     tm.export(path)
+    return path
+
+
+def export_step(m: Manifold, name: str) -> Path:
+    """STEP for services that don't take STL (e.g. PCBWay 3D printing).
+
+    The mesh is sewn into a closed solid and coplanar triangles are merged
+    back into flat faces, so flat walls come out as single faces.
+    """
+    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeFace, BRepBuilderAPI_MakePolygon,
+                                    BRepBuilderAPI_MakeSolid, BRepBuilderAPI_Sewing)
+    from OCP.BRepCheck import BRepCheck_Analyzer
+    from OCP.BRepGProp import BRepGProp
+    from OCP.GProp import GProp_GProps
+    from OCP.gp import gp_Pnt
+    from OCP.IFSelect import IFSelect_RetDone
+    from OCP.ShapeUpgrade import ShapeUpgrade_UnifySameDomain
+    from OCP.STEPControl import STEPControl_AsIs, STEPControl_Writer
+    from OCP.TopAbs import TopAbs_SHELL
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopoDS import TopoDS
+
+    mesh = m.to_mesh()
+    verts = mesh.vert_properties[:, :3]
+    sew = BRepBuilderAPI_Sewing(1e-4)
+    for a, b, c in mesh.tri_verts:
+        poly = BRepBuilderAPI_MakePolygon(*(gp_Pnt(*map(float, verts[i])) for i in (a, b, c)), True)
+        sew.Add(BRepBuilderAPI_MakeFace(poly.Wire(), True).Face())
+    sew.Perform()
+    exp = TopExp_Explorer(sew.SewedShape(), TopAbs_SHELL)
+    solid = BRepBuilderAPI_MakeSolid(TopoDS.Shell(exp.Current())).Solid()
+    unify = ShapeUpgrade_UnifySameDomain(solid, True, True, False)
+    unify.Build()
+    shape = unify.Shape()
+    if not BRepCheck_Analyzer(shape).IsValid():
+        raise SystemExit(f"{name}: STEP solid is not valid")
+    props = GProp_GProps()
+    BRepGProp.VolumeProperties_s(shape, props)
+    if abs(abs(props.Mass()) - m.volume()) > 0.01 * m.volume():
+        raise SystemExit(f"{name}: STEP volume {props.Mass():.1f} != mesh volume {m.volume():.1f}")
+    writer = STEPControl_Writer()
+    writer.Transfer(shape, STEPControl_AsIs)
+    path = OUT / f"{name}.step"
+    if writer.Write(str(path)) != IFSelect_RetDone:
+        raise SystemExit(f"{name}: STEP export failed")
     return path
 
 
@@ -219,7 +267,12 @@ def main() -> int:
     for name, m in parts.items():
         b = m.bounding_box()
         size = [b[3] - b[0], b[4] - b[1], b[5] - b[2]]
-        print(f"{name:14s} {size[0]:6.1f} x {size[1]:5.1f} x {size[2]:5.1f} mm  -> {export(m, name).name}")
+        stl = export(m, name)
+        try:
+            step = export_step(m, name).name
+        except ImportError:
+            step = "(no STEP: pip install cadquery-ocp)"
+        print(f"{name:14s} {size[0]:6.1f} x {size[1]:5.1f} x {size[2]:5.1f} mm  -> {stl.name}, {step}")
     print(f"window {WINDOW_W:.1f} x {WINDOW_H:.1f} mm, case {OUTER_W:.1f} x {OUTER_H:.1f} x "
           f"{PLATE + DEPTH + BACK:.1f} mm")
     return 0

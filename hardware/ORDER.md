@@ -6,7 +6,7 @@ package with:
 ```bash
 python3.12 hardware/ledbar/build.py && python3 hardware/case/build.py
 cd hardware && zip -r SimRaceLogger-prototype.zip ORDER.md ledbar/out/*/gerbers.zip \
-    ledbar/out/*/bom.csv ledbar/out/*/cpl.csv case/out/case_*.stl case/out/diffuser_*.stl
+    ledbar/out/*/bom.csv ledbar/out/*/cpl.csv case/out/case_*.st* case/out/diffuser_*.st*
 ```
 
 ## 1. LED bars — PCB + assembly (two separate orders)
@@ -27,12 +27,15 @@ at the corner marked "1" on the silkscreen.
 
 ## 2. Case — 3D printing
 
+Upload the `.step` files (PCBWay's 3D printing form takes STEP; the `.stl`
+files are the same parts for your own printer).
+
 | File | Qty | Material |
 |------|-----|----------|
-| `case_front.stl` | 1 | MJF/SLS **PA12 nylon, black** (or FDM PETG black) |
-| `case_back.stl` | 1 | same |
-| `diffuser_top.stl` | 1 | SLA **white resin** or SLS PA12 white (unpainted) |
-| `diffuser_side.stl` | 2 | same |
+| `case_front.step` | 1 | MJF/SLS **PA12 nylon, black** (or FDM PETG black) |
+| `case_back.step` | 1 | same |
+| `diffuser_top.step` | 1 | SLA **white resin** or SLS PA12 white (unpainted) |
+| `diffuser_side.step` | 2 | same |
 
 **Risk:** the case uses datasheet dimensions of the Waveshare
 ESP32-S3-Touch-LCD-4.3 (106.1 × 67.8 mm), not a measured board. If the board
