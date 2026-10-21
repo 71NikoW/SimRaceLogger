@@ -104,11 +104,34 @@ TEST(leds_shift_lights) {
 
 #include "rigdash/alerts.h"
 
+// Returns the strip in logical order — top 0..11, left 12..15, right 16..19
+// (each side top→bottom) — so tests read naturally; chain order is checked
+// separately below.
 static std::vector<Rgb> strip(Screen sc, const State& s, uint32_t now, AlertKind a = AlertKind::None,
                               StripLayout l = StripLayout{}) {
-  std::vector<Rgb> out(l.count());
-  stripFor(sc, s, a, now, l, out.data());
+  std::vector<Rgb> chain(l.count()), out;
+  stripFor(sc, s, a, now, l, chain.data());
+  for (uint8_t i = 0; i < l.top; ++i) out.push_back(chain[l.topAt(i)]);
+  for (uint8_t i = 0; i < l.side; ++i) out.push_back(chain[l.left(i)]);
+  for (uint8_t i = 0; i < l.side; ++i) out.push_back(chain[l.right(i)]);
   return out;
+}
+
+TEST(strip_chain_order_matches_wiring) {
+  StripLayout l;  // 12 top, 4 per side
+  CHECK_EQ(l.left(3), 0);    // chain starts bottom-left
+  CHECK_EQ(l.left(0), 3);    // top of the left bar
+  CHECK_EQ(l.topAt(0), 4);   // then the top bar, left to right
+  CHECK_EQ(l.topAt(11), 15);
+  CHECK_EQ(l.right(0), 16);  // then the right bar, top to bottom
+  CHECK_EQ(l.right(3), 19);
+  State s = driving();
+  s.has_engine = true;
+  s.engine = eng(6310);  // only the leftmost top LED lit
+  std::vector<Rgb> chain(l.count());
+  stripFor(Screen::CurrentLap, s, AlertKind::None, 0, l, chain.data());
+  CHECK(chain[4] == rgb::kGreen);
+  CHECK(chain[5].off());
 }
 
 TEST(strip_shift_lights_fill_and_flash) {

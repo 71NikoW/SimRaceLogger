@@ -5,3 +5,6 @@ __pycache__/
 build/
 .pio/
 .vscode/
+hardware/ledbar/out/*/gerbers/
+*.kicad_prl
+fp-info-cache

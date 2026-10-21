@@ -192,8 +192,19 @@ void fillSides(Screen screen, const State& s, AlertKind alert, uint32_t now, uin
 
 void stripFor(Screen screen, const State& s, AlertKind alert, uint32_t now, const StripLayout& l,
               Rgb* out) {
-  fillTop(screen, s, now, l.top, out);
-  fillSides(screen, s, alert, now, l.side, out + l.top, out + l.top + l.side);
+  // Compute in logical order (top, left top→bottom, right top→bottom) and
+  // scatter into chain order.
+  constexpr uint8_t kMax = 64;
+  Rgb top[kMax], left[kMax], right[kMax];
+  const uint8_t nt = l.top < kMax ? l.top : kMax;
+  const uint8_t ns = l.side < kMax ? l.side : kMax;
+  fillTop(screen, s, now, nt, top);
+  fillSides(screen, s, alert, now, ns, left, right);
+  for (uint8_t i = 0; i < nt; ++i) out[l.topAt(i)] = top[i];
+  for (uint8_t i = 0; i < ns; ++i) {
+    out[l.left(i)] = left[i];
+    out[l.right(i)] = right[i];
+  }
 }
 
 }  // namespace rigdash

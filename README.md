@@ -24,6 +24,7 @@ Sim  ──►  PC bridge (Python)  ──USB serial──►  ESP32-S3 display
 | `firmware/lib/core`| Hardware-independent C++: protocol parser, formatting, screen manager |
 | `firmware/src`     | ESP32-S3 board layer (PlatformIO, Arduino framework)         |
 | `protocol/`        | Golden test frames shared by Python and C++ tests            |
+| `hardware/`        | LED bar PCBs (KiCad + fab files) and the 3D-printable case   |
 | `simulator/`       | Browser preview of all screens — open `simulator/index.html` |
 
 ## Run the tests

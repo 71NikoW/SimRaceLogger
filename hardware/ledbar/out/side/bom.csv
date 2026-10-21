@@ -1,0 +1,5 @@
+Item,Designator,Qty,Value,Footprint,Description,Manufacturer Part Number,LCSC (reference)
+1,R1,1,330R,R_0603_1608Metric,Resistor 330 Ω 1 % 0603,UNI-ROYAL 0603WAF3300T5E,C23138
+2,"LED1,LED2,LED3,LED4",4,WS2812B,LED_WS2812B_PLCC4_5.0x5.0mm_P3.2mm,RGB LED 5050 with integrated driver,Worldsemi WS2812B-B/W,C2761795
+3,"C1,C2,C3,C4",4,100nF,C_0603_1608Metric,Capacitor 100 nF 16 V X7R 0603,Samsung CL10B104KO8NNNC,C1591
+4,D1,1,1N4148W,D_SOD-123,Diode 1N4148W SOD-123,Diodes Inc. 1N4148W-7-F,C81598

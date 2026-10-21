@@ -34,8 +34,9 @@ enum class Screen : uint8_t;
 Leds ledsFor(Screen screen, const State& s, uint32_t now_ms);
 
 // --- LED frame (WS2812B / SK6812 strip around the display) -----------------
-// Index order: top bar left→right, then left side top→bottom, then right
-// side top→bottom. The driver scales by brightness; colours here are full.
+// Index order follows the wiring of the LED bars (hardware/ledbar): one
+// chain up the left side (bottom→top), across the top (left→right) and down
+// the right side (top→bottom). The driver scales by brightness.
 struct Rgb {
   uint8_t r = 0, g = 0, b = 0;
   bool operator==(const Rgb& o) const { return r == o.r && g == o.g && b == o.b; }
@@ -45,6 +46,10 @@ struct StripLayout {
   uint8_t top = 12;   // shift lights
   uint8_t side = 4;   // per side: flags, warnings, delta
   constexpr uint16_t count() const { return top + 2u * side; }
+  // Chain index of LED i (0 = top) on each side, and of top LED i (0 = left).
+  constexpr uint16_t left(uint8_t i) const { return static_cast<uint16_t>(side - 1 - i); }
+  constexpr uint16_t topAt(uint8_t i) const { return static_cast<uint16_t>(side + i); }
+  constexpr uint16_t right(uint8_t i) const { return static_cast<uint16_t>(side + top + i); }
 };
 namespace rgb {
 constexpr Rgb kOff{0, 0, 0}, kGreen{0, 255, 0}, kYellow{255, 190, 0}, kRed{255, 0, 0},
@@ -53,7 +58,7 @@ constexpr Rgb kOff{0, 0, 0}, kGreen{0, 255, 0}, kYellow{255, 190, 0}, kRed{255, 
 }
 
 enum class AlertKind : uint8_t;
-// Fills `out` (layout.count() entries).
+// Fills `out` (layout.count() entries, chain order; top/side max 64 each).
 //  top:   shift lights green → yellow → red, all flash blue at the shift
 //         point; pit limiter = alternating halves blue; no signal = scanner.
 //  sides: flag colour (blinking; chequered alternates), pit limiter green,

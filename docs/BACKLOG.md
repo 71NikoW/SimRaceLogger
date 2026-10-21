@@ -41,7 +41,9 @@ Brainstorm, not yet prioritised. ✅ = done.
 ## Hardware & community
 - ✅ Parts list, wiring and build steps (docs/BUILD.md)
 - ✅ Scripted Spa demo race with flags (`--source spa`)
-- 3D-printable case variants (desk stand, wheel-base mount, button box insert)
+- ✅ Parametric 3D-printable case (STL) — needs measured board dimensions
+- ✅ LED bar PCBs (KiCad, Gerber/BOM/CPL for PCBWay)
+- Case variants (desk stand, wheel-base mount, button box insert)
 - Build photos and shop links (after the prototype)
 - Option for a cheap ESP32-S3 all-in-one board
 - Contributing guide, issue templates, example videos

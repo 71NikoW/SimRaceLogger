@@ -19,8 +19,9 @@ constexpr int kPinButtonBright = 5;   // cycles brightness
 constexpr int kPinBacklight = 7;
 // Two status LEDs, common cathode RGB (R, G, B per LED).
 constexpr int kPinLed[2][3] = {{15, 16, 17}, {18, 8, 3}};
-// LED frame: one WS2812B / SK6812 chain — 12 on top, 4 down each side.
-constexpr int kPinStrip = 21;
+// LED frame: the three LED bars (hardware/ledbar) as one chain. GPIO6 is
+// on the Waveshare 4.3" board's sensor connector — verify on the real board.
+constexpr int kPinStrip = 6;
 constexpr StripLayout kStripLayout{12, 4};
 // USB 2.0 gives 500 mA. 20 LEDs at full white draw ~1.2 A, so cap the strip.
 constexpr uint8_t kStripMaxBrightness = 60;
