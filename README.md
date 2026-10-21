@@ -4,6 +4,8 @@ A small dash display for sim-racing rigs: big current lap time, lap number,
 position, fuel in laps, pit limiter, invalidated laps, engine state, track
 map and weather. ESP32-S3 + TFT, 3D-printed case, PC bridge for the sim.
 
+> **Want to build one?** See the [build guide](docs/BUILD.md) for parts and wiring.
+>
 > **Status: concept phase.** Protocol, core logic and tests exist; display
 > rendering, game adapters and the case are next. See the
 > [concept](docs/CONCEPT.md).
@@ -17,7 +19,7 @@ Sim  ──►  PC bridge (Python)  ──USB serial──►  ESP32-S3 display
 
 | Path               | What                                                         |
 |--------------------|--------------------------------------------------------------|
-| `docs/`            | [Concept](docs/CONCEPT.md), [protocol](docs/PROTOCOL.md), [hardware](docs/HARDWARE.md), [backlog](docs/BACKLOG.md) |
+| `docs/`            | [Concept](docs/CONCEPT.md), [protocol](docs/PROTOCOL.md), [build guide](docs/BUILD.md), [backlog](docs/BACKLOG.md) |
 | `bridge/`          | PC side: telemetry sources → serial frames (`rigdash-bridge`) |
 | `firmware/lib/core`| Hardware-independent C++: protocol parser, formatting, screen manager |
 | `firmware/src`     | ESP32-S3 board layer (PlatformIO, Arduino framework)         |
@@ -39,6 +41,7 @@ cmake -S firmware -B build && cmake --build build && ctest --test-dir build
 
 ```bash
 rigdash-bridge --source demo --dry-run --frames 10       # print frames
+rigdash-bridge --source spa --port auto                  # scripted Spa race with flags
 pip install -e "bridge[serial]"
 rigdash-bridge --source demo --port auto                 # find the display and send
 rigdash-bridge --port COM5 --pages current,delta,tyres,weather --units mph --log laps.csv

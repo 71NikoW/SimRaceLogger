@@ -1,6 +1,7 @@
 // Board layer: USB serial -> FrameParser -> State -> AlertEngine/ScreenManager
 // -> renderer + LEDs. The renderer is a serial text stub until the display
 // driver is chosen; LEDs and buttons are real.
+#include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 
 #include "rigdash/alerts.h"
@@ -18,6 +19,11 @@ constexpr int kPinButtonBright = 5;   // cycles brightness
 constexpr int kPinBacklight = 7;
 // Two status LEDs, common cathode RGB (R, G, B per LED).
 constexpr int kPinLed[2][3] = {{15, 16, 17}, {18, 8, 3}};
+// LED frame: one WS2812B / SK6812 chain — 12 on top, 4 down each side.
+constexpr int kPinStrip = 21;
+constexpr StripLayout kStripLayout{12, 4};
+// USB 2.0 gives 500 mA. 20 LEDs at full white draw ~1.2 A, so cap the strip.
+constexpr uint8_t kStripMaxBrightness = 60;
 constexpr uint32_t kRenderIntervalMs = 33;  // ~30 fps
 constexpr uint32_t kDebounceMs = 30;
 constexpr uint32_t kLongPressMs = 600;
@@ -27,6 +33,7 @@ State state;
 ScreenManager screens;
 AlertEngine alerts;
 uint8_t brightness = 200;
+Adafruit_NeoPixel strip(kStripLayout.count(), kPinStrip, NEO_GRB + NEO_KHZ800);
 bool brightnessFromBridge = true;
 
 const char* screenName(Screen s) {
@@ -97,7 +104,20 @@ void setup() {
     for (int pin : led) pinMode(pin, OUTPUT);
   }
   ledcAttach(kPinBacklight, 5000, 8);
+  strip.begin();
+  strip.show();
 }
+
+namespace {
+void writeStrip(Screen s, uint32_t now) {
+  Rgb px[kStripLayout.count()];
+  stripFor(s, state, alerts.current(now).kind, now, kStripLayout, px);
+  // Follow the display brightness, capped for USB power.
+  strip.setBrightness(static_cast<uint8_t>(brightness * kStripMaxBrightness / 255));
+  for (uint16_t i = 0; i < kStripLayout.count(); ++i) strip.setPixelColor(i, px[i].r, px[i].g, px[i].b);
+  strip.show();
+}
+}  // namespace
 
 void loop() {
   const uint32_t now = millis();
@@ -145,6 +165,7 @@ void loop() {
     const Leds leds = ledsFor(s, state, now);
     writeLed(0, leds.left);
     writeLed(1, leds.right);
+    writeStrip(s, now);
     ledcWrite(kPinBacklight, brightness);
   }
 }

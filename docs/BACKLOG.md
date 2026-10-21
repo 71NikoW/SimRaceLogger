@@ -12,7 +12,7 @@ Brainstorm, not yet prioritised. ✅ = done.
 - ✅ Pit window open/closed, mandatory stop done
 
 ## Car
-- ✅ Shift lights on the two LEDs; optional WS2812 strip still open
+- ✅ Shift lights and flags on a WS2812B LED frame (12 top + 4 per side, configurable) or two status LEDs
 - ✅ Fuel: per-lap average, fuel to add to finish, low-fuel warning
 - ✅ Tyres: temperatures, pressures, wear; brake temps
 - ✅ ABS / TC / brake bias / engine map — popup when changed on the wheel
@@ -39,7 +39,9 @@ Brainstorm, not yet prioritised. ✅ = done.
 - Multiple displays on one bridge (e.g. one for timing, one for car)
 
 ## Hardware & community
+- ✅ Parts list, wiring and build steps (docs/BUILD.md)
+- ✅ Scripted Spa demo race with flags (`--source spa`)
 - 3D-printable case variants (desk stand, wheel-base mount, button box insert)
-- Build guide with photos, wiring diagram, BOM with links
+- Build photos and shop links (after the prototype)
 - Option for a cheap ESP32-S3 all-in-one board
 - Contributing guide, issue templates, example videos

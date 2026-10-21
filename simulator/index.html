@@ -108,6 +108,27 @@ h1 {
   justify-content: center;
   gap: 15%;
 }
+/* LED frame: smoked diffuser bar on top (shift lights) and columns at the sides (flags, warnings). */
+.strip-top, .strip-side {
+  position: absolute;
+  display: flex;
+  gap: 1.1%;
+  padding: 0.5%;
+  border-radius: 6px;
+  background: rgba(3, 8, 24, .75);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.12);
+}
+.strip-top { top: 1.4%; left: 14%; right: 14%; height: 4.2%; }
+.strip-side { flex-direction: column; top: 20%; bottom: 20%; width: 2.6%; gap: 5%; }
+.strip-side.l { left: 1.6%; }
+.strip-side.r { right: 1.6%; }
+.px {
+  flex: 1;
+  border-radius: 3px;
+  background: #0c1428;
+  transition: background .05s;
+}
+.device[data-leds="frame"] .leds, .device[data-leds="two"] .strip-top, .device[data-leds="two"] .strip-side { display: none; }
 .led {
   width: clamp(8px, 1.6vw, 12px);
   aspect-ratio: 1;
@@ -166,6 +187,7 @@ button {
   cursor: pointer;
 }
 button:hover { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .pair { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
@@ -232,12 +254,16 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
   <div class="main">
     <div class="left">
       <section class="bench" aria-label="Display preview">
-        <div class="device">
+        <div class="device" id="device" data-leds="frame">
           <div class="leds"><span class="led" id="led1"></span><span class="led" id="led2"></span></div>
+          <div class="strip-top" id="stripTop"></div>
+          <div class="strip-side l" id="stripLeft"></div>
+          <div class="strip-side r" id="stripRight"></div>
           <div class="bezel"><canvas id="screen" width="640" height="288" aria-label="Lap display screen"></canvas></div>
         </div>
         <div class="pages" id="pageButtons" aria-label="Pages"></div>
         <div class="device-caption">
+          <span id="cornerWrap">Spa: <b id="corner">—</b></span>
           <span>Screen: <b id="screenName">—</b></span>
           <span>Frames: <b id="frameCount">0</b></span>
           <span>CRC errors: <b id="crcErrors">0</b></span>
@@ -257,6 +283,28 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
     </div>
 
     <aside class="panel" aria-label="Controls">
+      <div class="group">
+        <div class="label">Demo</div>
+        <div class="row chips" id="modeButtons" aria-label="Demo mode">
+          <button type="button" data-mode="spa" aria-pressed="true">Spa race (6 laps)</button>
+          <button type="button" data-mode="free" aria-pressed="false">Free play</button>
+        </div>
+        <div class="row chips" id="speedButtons" aria-label="Playback speed">
+          <button type="button" data-speed="1" aria-pressed="true">1×</button>
+          <button type="button" data-speed="4" aria-pressed="false">4×</button>
+          <button type="button" data-speed="10" aria-pressed="false">10×</button>
+        </div>
+        <p class="note" id="modeNote">Scripted race at Spa: pit exit, track limits at Raidillon, yellow at Pouhon, blue flag at Blanchimont, safety car with rain arriving, last lap, chequered flag. Flags and weather come from the script.</p>
+      </div>
+
+      <div class="group">
+        <div class="label">LEDs</div>
+        <div class="row chips" id="ledButtons" aria-label="LED layout">
+          <button type="button" data-leds="frame" aria-pressed="true">LED frame (12 + 2×4)</button>
+          <button type="button" data-leds="two" aria-pressed="false">2 status LEDs</button>
+        </div>
+      </div>
+
       <div class="group">
         <div class="label">Display buttons</div>
         <div class="row">
@@ -326,6 +374,438 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
   </div>
 </div>
 
+<script type="application/json" id="spa-track">{
+ "name": "Circuit de Spa-Francorchamps",
+ "length_m": 7004,
+ "target_lap_ms": 138400,
+ "sectors": [
+  0.3,
+  0.74
+ ],
+ "pit_exit": 0.06,
+ "note": "Approximate GT3 speed profile and outline for the demo, not survey data.",
+ "profile": [
+  [
+   0,
+   200
+  ],
+  [
+   250,
+   232
+  ],
+  [
+   330,
+   72
+  ],
+  [
+   420,
+   115
+  ],
+  [
+   600,
+   205
+  ],
+  [
+   900,
+   248
+  ],
+  [
+   1100,
+   252
+  ],
+  [
+   1900,
+   276
+  ],
+  [
+   2010,
+   128
+  ],
+  [
+   2120,
+   118
+  ],
+  [
+   2250,
+   145
+  ],
+  [
+   2560,
+   92
+  ],
+  [
+   2650,
+   110
+  ],
+  [
+   2850,
+   165
+  ],
+  [
+   3150,
+   190
+  ],
+  [
+   3400,
+   208
+  ],
+  [
+   3600,
+   175
+  ],
+  [
+   3800,
+   148
+  ],
+  [
+   4100,
+   132
+  ],
+  [
+   4350,
+   190
+  ],
+  [
+   4600,
+   142
+  ],
+  [
+   4850,
+   205
+  ],
+  [
+   5300,
+   248
+  ],
+  [
+   5900,
+   262
+  ],
+  [
+   6450,
+   272
+  ],
+  [
+   6650,
+   78
+  ],
+  [
+   6760,
+   95
+  ],
+  [
+   6850,
+   140
+  ],
+  [
+   7004,
+   200
+  ]
+ ],
+ "corners": [
+  [
+   0,
+   "START / FINISH"
+  ],
+  [
+   330,
+   "LA SOURCE"
+  ],
+  [
+   900,
+   "EAU ROUGE"
+  ],
+  [
+   1100,
+   "RAIDILLON"
+  ],
+  [
+   1500,
+   "KEMMEL STRAIGHT"
+  ],
+  [
+   2050,
+   "LES COMBES"
+  ],
+  [
+   2250,
+   "MALMEDY"
+  ],
+  [
+   2560,
+   "BRUXELLES"
+  ],
+  [
+   2850,
+   "SPEAKERS CORNER"
+  ],
+  [
+   3400,
+   "POUHON"
+  ],
+  [
+   3800,
+   "FAGNES"
+  ],
+  [
+   4100,
+   "CAMPUS"
+  ],
+  [
+   4600,
+   "STAVELOT"
+  ],
+  [
+   4850,
+   "PAUL FRERE"
+  ],
+  [
+   5900,
+   "BLANCHIMONT"
+  ],
+  [
+   6650,
+   "BUS STOP"
+  ]
+ ],
+ "map": [
+  [
+   0.13,
+   0.36
+  ],
+  [
+   0.12,
+   0.22
+  ],
+  [
+   0.11,
+   0.12
+  ],
+  [
+   0.08,
+   0.08
+  ],
+  [
+   0.06,
+   0.12
+  ],
+  [
+   0.1,
+   0.22
+  ],
+  [
+   0.15,
+   0.34
+  ],
+  [
+   0.18,
+   0.42
+  ],
+  [
+   0.22,
+   0.38
+  ],
+  [
+   0.27,
+   0.32
+  ],
+  [
+   0.4,
+   0.22
+  ],
+  [
+   0.53,
+   0.12
+  ],
+  [
+   0.58,
+   0.09
+  ],
+  [
+   0.62,
+   0.13
+  ],
+  [
+   0.61,
+   0.2
+  ],
+  [
+   0.64,
+   0.26
+  ],
+  [
+   0.67,
+   0.31
+  ],
+  [
+   0.63,
+   0.36
+  ],
+  [
+   0.58,
+   0.42
+  ],
+  [
+   0.55,
+   0.5
+  ],
+  [
+   0.58,
+   0.58
+  ],
+  [
+   0.66,
+   0.6
+  ],
+  [
+   0.74,
+   0.64
+  ],
+  [
+   0.79,
+   0.7
+  ],
+  [
+   0.88,
+   0.76
+  ],
+  [
+   0.9,
+   0.84
+  ],
+  [
+   0.85,
+   0.88
+  ],
+  [
+   0.74,
+   0.86
+  ],
+  [
+   0.6,
+   0.8
+  ],
+  [
+   0.47,
+   0.73
+  ],
+  [
+   0.34,
+   0.62
+  ],
+  [
+   0.22,
+   0.54
+  ],
+  [
+   0.17,
+   0.52
+  ],
+  [
+   0.15,
+   0.48
+  ],
+  [
+   0.16,
+   0.44
+  ],
+  [
+   0.13,
+   0.36
+  ]
+ ],
+ "script": {
+  "laps": 6,
+  "events": [
+   {
+    "lap": 1,
+    "from": 0.0,
+    "to": 0.06,
+    "pit": true
+   },
+   {
+    "lap": 2,
+    "from": 0.16,
+    "to": 0.17,
+    "invalid": true
+   },
+   {
+    "lap": 2,
+    "from": 0.47,
+    "to": 0.56,
+    "flag": "yellow"
+   },
+   {
+    "lap": 3,
+    "from": 0.4,
+    "to": 1.0,
+    "weather": "soon"
+   },
+   {
+    "lap": 3,
+    "from": 0.82,
+    "to": 0.9,
+    "flag": "blue"
+   },
+   {
+    "lap": 3,
+    "from": 0.95,
+    "to": 1.0,
+    "position": 2
+   },
+   {
+    "lap": 4,
+    "from": 0.0,
+    "to": 0.3,
+    "weather": "soon"
+   },
+   {
+    "lap": 4,
+    "from": 0.3,
+    "to": 1.0,
+    "weather": "light"
+   },
+   {
+    "lap": 4,
+    "from": 0.1,
+    "to": 1.0,
+    "flag": "safety_car",
+    "mode": "sc"
+   },
+   {
+    "lap": 5,
+    "from": 0.0,
+    "to": 1.0,
+    "weather": "light"
+   },
+   {
+    "lap": 5,
+    "from": 0.0,
+    "to": 0.04,
+    "flag": "green"
+   },
+   {
+    "lap": 5,
+    "from": 0.6,
+    "to": 0.66,
+    "flag": "yellow"
+   },
+   {
+    "lap": 6,
+    "from": 0.0,
+    "to": 1.0,
+    "weather": "drying",
+    "last_lap": true
+   },
+   {
+    "lap": 7,
+    "from": 0.0,
+    "to": 0.15,
+    "flag": "chequered"
+   }
+  ]
+ }
+}</script>
 <script>
 // ===========================================================================
 // Protocol (mirror of bridge/src/rigdash/protocol.py and firmware core)
@@ -622,6 +1102,51 @@ function ledsFor(screen, S, now) {
   return screen === "EngineOff" ? ["", ""] : ["blue", "blue"];
 }
 
+// LED frame (mirror of stripFor in firmware/lib/core/src/dash.cpp)
+const RGB = { off: null, green: "#00ff00", yellow: "#ffbe00", red: "#ff0000", blue: "#003cff", cyan: "#00c8ff",
+  white: "#ffffff", orange: "#ff5a00", dimBlue: "#00102e", dimGreen: "#003000", dimRed: "#300000" };
+const ALERT_RGB = { RainSoon: "cyan", RainStarted: "cyan", RainIncreasing: "cyan", WetTyresAdvised: "cyan",
+  TrackDrying: "green", PitWindowOpen: "green", LowFuel: "orange", FuelShort: "orange", Penalty: "orange",
+  Damage: "red", TrackLimits: "yellow", Abs: "blue", Tc: "blue", TcCut: "blue", EngineMap: "blue",
+  BrakeBias: "blue", LastLap: "white" };
+const FLAG_RGB = { 2: "yellow", 8: "yellow", 9: "yellow", 3: "blue", 5: "red", 7: "red", 4: "white", 6: "white" };
+function stripFor(screen, S, alertKind, now, top = 12, side = 4) {
+  const T = Array(top).fill("off"), Lf = Array(side).fill("off"), Rt = Array(side).fill("off");
+  const t = S.t || { flags: 0, race_flag: 0, best_lap_ms: 0, delta_ms: 0 };
+  // top bar
+  if (top && screen !== "EngineOff") {
+    if (screen === "NoSignal") {
+      const period = 2 * top, step = Math.floor(now / 120) % (period > 2 ? period - 2 : 1);
+      const pos = step < top ? step : period - 2 - step;
+      T[Math.min(pos, top - 1)] = "dimBlue";
+    } else if (t.flags & F_PIT) {
+      const ph = blinkOn(now);
+      for (let i = 0; i < top; i++) T[i] = ((i < Math.floor(top / 2)) === ph) ? "blue" : "off";
+    } else if (S.engine) {
+      if (S.engine.shift_rpm && S.engine.rpm >= S.engine.shift_rpm) { if (blinkOn(now, 100)) T.fill("blue"); }
+      else {
+        const lit = shiftLedsLit(S.engine, top);
+        for (let i = 0; i < lit; i++) { const pct = Math.floor((i + 1) * 100 / top); T[i] = pct <= 50 ? "green" : pct <= 80 ? "yellow" : "red"; }
+      }
+    }
+  }
+  // sides
+  let c = "off", alternate = false;
+  const blink = blinkOn(now), fl = FLAG_RGB[t.race_flag];
+  if (screen === "NoSignal" || screen === "EngineOff") c = "off";
+  else if (fl) { c = fl; alternate = t.race_flag === 6 || t.race_flag === 8 || t.race_flag === 9; if (!alternate && !blink) c = "off"; }
+  else if (t.flags & F_PIT) c = blink ? "green" : "off";
+  else if (screen === "LapInvalidated") c = "red";
+  else if (alertKind) c = blink ? (ALERT_RGB[alertKind] || "off") : "off";
+  else if (t.best_lap_ms) c = t.delta_ms <= 0 ? "dimGreen" : "dimRed";
+  else c = "dimBlue";
+  for (let i = 0; i < side; i++) {
+    if (alternate) { const on = ((i & 1) === 0) === blink; Lf[i] = on ? c : "off"; Rt[i] = on ? "off" : c; }
+    else { Lf[i] = c; Rt[i] = c; }
+  }
+  return [T, Lf, Rt];
+}
+
 // ===========================================================================
 // Formatting (mirror of firmware/lib/core/src/format.cpp)
 // ===========================================================================
@@ -773,6 +1298,119 @@ const demo = {
     return { t, engine, tyres, car: { ...this.car }, fuel, race, timing: this.sectors.timing(), weather, history: this.history };
   },
 };
+
+// Scripted Spa race (mirror of bridge/src/rigdash/sources/spa.py)
+const SPA = JSON.parse(document.getElementById("spa-track").textContent);
+const SPA_FLAGS = { green: 1, yellow: 2, blue: 3, white: 4, chequered: 6, red: 7, safety_car: 8, vsc: 9 };
+const GEAR_TOP = [95, 130, 165, 200, 240, 290], SHIFT = 7800, REDLINE = 8000, SPA_FUEL_PER_LAP = 3.6;
+const bisectRight = (a, x) => { let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (x < a[m]) hi = m; else lo = m + 1; } return lo; };
+class LapProfile {
+  constructor(track, cap = null, scale = null) {
+    const xs = track.profile.map(p => p[0]), vs = track.profile.map(p => p[1]);
+    this.xs = xs; this.vs = vs; this.cap = cap; this.length = track.length_m;
+    this.dist = [0]; this.time = [0];
+    let d = 0;
+    while (d < this.length) {
+      let v = LapProfile.speedAt(xs, vs, d + 2.5); if (cap) v = Math.min(v, cap);
+      this.time.push(this.time[this.time.length - 1] + 5 / (v / 3.6));
+      d = Math.min(this.length, d + 5); this.dist.push(d);
+    }
+    this.scale = scale ?? track.target_lap_ms / 1000 / this.time[this.time.length - 1];
+    this.time = this.time.map(t => t * this.scale);
+    this.lapMs = Math.round(this.time[this.time.length - 1] * 1000);
+  }
+  static speedAt(xs, vs, d) {
+    const i = Math.max(1, Math.min(xs.length - 1, bisectRight(xs, d)));
+    return xs[i] > xs[i - 1] ? vs[i - 1] + (vs[i] - vs[i - 1]) * (d - xs[i - 1]) / (xs[i] - xs[i - 1]) : vs[i - 1];
+  }
+  distanceAt(tms) {
+    const t = tms / 1000, i = Math.max(1, Math.min(this.time.length - 1, bisectRight(this.time, t)));
+    return this.dist[i - 1] + (this.dist[i] - this.dist[i - 1]) * (t - this.time[i - 1]) / (this.time[i] - this.time[i - 1]);
+  }
+  timeAt(d) {
+    const i = Math.max(1, Math.min(this.dist.length - 1, bisectRight(this.dist, d)));
+    return 1000 * (this.time[i - 1] + (this.time[i] - this.time[i - 1]) * (d - this.dist[i - 1]) / (this.dist[i] - this.dist[i - 1]));
+  }
+  speed(d) { const v = LapProfile.speedAt(this.xs, this.vs, d) / this.scale; return this.cap ? Math.min(v, this.cap / this.scale) : v; }
+}
+const gearFor = v => { for (let g = 1; g <= 6; g++) if (v <= GEAR_TOP[g - 1] * SHIFT / REDLINE) return g; return 6; };
+const rpmFor = (v, g) => Math.min(8300, Math.max(3000, Math.round(v / GEAR_TOP[g - 1] * REDLINE)));
+const SPA_NORMAL = new LapProfile(SPA), SPA_SC = new LapProfile(SPA, 150, SPA_NORMAL.scale);
+function cornerAt(d) { let n = ""; for (const [at, name] of SPA.corners) if (d >= at) n = name; return n; }
+
+class SpaRace {
+  constructor() { this.start = null; this.lap = 1; this.lapStart = 0; this.last = 0; this.best = 0; this.invalid = false;
+    this.fuel = 40; this.limits = 0; this.position = 3; this.history = []; this.sectors = new SectorTracker(); this.corner = ""; }
+  events(lap, frac) {
+    const out = { flag: "green", weather: "dry" };
+    for (const e of SPA.script.events) if (e.lap === lap && e.from <= frac && frac < e.to + 1e-9) {
+      for (const [k, v] of Object.entries(e)) if (!["lap", "from", "to"].includes(k)) out[k] = v;
+    }
+    if (lap === 1 && frac < SPA.pit_exit) out.pit = true;
+    return out;
+  }
+  profile(lap) { return SPA.script.events.some(e => e.lap === lap && e.mode === "sc") ? SPA_SC : SPA_NORMAL; }
+  poll(now) {
+    if (this.start === null) { this.start = now; this.lapStart = now; }
+    const laps = SPA.script.laps;
+    let prof = this.profile(this.lap), cur = now - this.lapStart;
+    while (cur >= prof.lapMs) {
+      this.last = prof.lapMs;
+      this.history.unshift([this.last, !this.invalid]); this.history = this.history.slice(0, 5);
+      if (!this.invalid && (!this.best || this.last < this.best)) this.best = this.last;
+      this.lap++; this.lapStart += prof.lapMs; this.invalid = false; this.fuel -= SPA_FUEL_PER_LAP;
+      prof = this.profile(this.lap); cur = now - this.lapStart;
+    }
+    const d = prof.distanceAt(cur), frac = d / SPA.length_m;
+    if (this.lap > laps && frac >= 0.15) { Object.assign(this, new SpaRace()); return this.poll(now); }
+    const ev = this.events(this.lap, frac);
+    if (ev.invalid && !this.invalid) { this.invalid = true; this.limits++; }
+    if (ev.position) this.position = ev.position;
+    this.corner = cornerAt(d);
+    const pit = !!ev.pit, eng = ui.engine;
+    const speed = !eng ? 0 : pit ? 60 : prof.speed(d), gear = !eng ? 0 : pit ? 2 : gearFor(speed);
+    const Wx = WEATHER[ev.weather];
+    let flags = F_IGN; if (eng) flags |= F_ENGINE; if (pit) flags |= F_PIT | F_INPIT; if (this.invalid) flags |= F_INVALID;
+    const fuelNow = Math.max(0, this.fuel - SPA_FUEL_PER_LAP * frac);
+    const elapsed = (now - this.start) / 1000, warm = Math.min(1, 0.6 + elapsed / 300);
+    const t = { current_lap_ms: Math.round(cur), last_lap_ms: this.last, best_lap_ms: this.best, last_pit_ms: 0,
+      delta_ms: this.best ? Math.round(cur - SPA_NORMAL.timeAt(d) * this.best / SPA_NORMAL.lapMs) : 0,
+      lap_number: this.lap, position: this.position, gear, speed_kmh: Math.round(speed),
+      fuel_laps_x10: Math.round(fuelNow / SPA_FUEL_PER_LAP * 10), track_pos: Math.min(10000, Math.floor(frac * 10000)),
+      air_temp_x10: 184 - Wx.rain * 12, track_temp_x10: 243 - Wx.wetness * 30, flags, session: 3, race_flag: SPA_FLAGS[ev.flag] };
+    this.sectors.update(t);
+    const wheels = [0, 1, 2, 3].map(i => ({
+      temp_x10: Math.round((55 + warm * 33 + (i === 1 ? 3 : 0) - Wx.wetness * 5 + 4 * Math.sin(frac * 2 * Math.PI * 5 + i)) * 10),
+      psi_x100: Math.round((25 + warm * 2.6) * 100), wear: 100 - Math.floor(this.lap * 1.5),
+      brake_c: Math.round(250 + 400 * Math.max(0, 1 - speed / 200)) }));
+    return {
+      t, engine: { rpm: eng ? (pit ? 3200 : rpmFor(speed, gear)) : 0, shift_rpm: SHIFT, max_rpm: 8300 },
+      tyres: { wheels, opt_min_x10: 800, opt_max_x10: 950, target_psi_x100: 2750, compound: 2 },
+      car: { ...demo.car },
+      fuel: { liters_x10: Math.round(fuelNow * 10), per_lap_x100: SPA_FUEL_PER_LAP * 100, capacity_x10: 1200, to_finish_x10: 0x7FFF },
+      race: { gap_ahead_ms: this.position > 1 ? 1400 : GAP_UNKNOWN, gap_behind_ms: -900, time_left_s: 0xFFFFFFFF,
+        laps_left: Math.max(0, laps - this.lap + 1), car_count: 30, penalty: demo.race.penalty, penalty_s: 0,
+        track_limits: this.limits, track_limits_max: 4, pit_window: 1, bits: ev.last_lap ? 2 : 0 },
+      timing: this.sectors.timing(),
+      weather: { ...Wx, grip_pct: 100 - Wx.wetness * 7, wind_kmh: 14, wind_dir_deg: 250, clouds_pct: 60 + Wx.rain_in_30 * 10 },
+      history: this.history,
+    };
+  }
+}
+let spa = new SpaRace();
+
+// Spa outline, resampled by length so fractions line up with distance.
+const spaMap = (() => {
+  const p = SPA.map, seg = [0];
+  for (let i = 1; i < p.length; i++) seg.push(seg[i - 1] + Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]));
+  const total = seg[seg.length - 1];
+  return f => {
+    const target = f * total; let i = 1;
+    while (i < seg.length - 1 && seg[i] < target) i++;
+    const k = (target - seg[i - 1]) / (seg[i] - seg[i - 1] || 1);
+    return [p[i - 1][0] + (p[i][0] - p[i - 1][0]) * k, p[i - 1][1] + (p[i][1] - p[i - 1][1]) * k];
+  };
+})();
 
 // ===========================================================================
 // Renderer — canvas primitives similar to what LovyanGFX offers on the ESP32
@@ -990,13 +1628,20 @@ const screens = {
   },
   TrackData(t) {
     topBar(t, "TRACK DATA");
-    fitText((S.track || TRACK).toUpperCase(), 20, 78, 380, 700, 28, C.white);
+    fitText((S.track || TRACK).toUpperCase(), 20, 78, 300, 700, 28, C.white);
     const bx = 20, by = 92, bw = 300, bh = 180;
     g.strokeStyle = "#2a3040"; g.lineWidth = 2; g.strokeRect(bx, by, bw, bh);
-    g.strokeStyle = C.white; g.lineWidth = 6; g.lineJoin = "round"; g.beginPath();
-    trackPts.forEach((p, i) => { const [x, y] = trackXY(i / (trackPts.length - 1), bx, by, bw, bh); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    const isSpa = (S.track || "").includes("Spa");
+    const at = isSpa ? f => { const [x, y] = spaMap(f); return [bx + 14 + x * (bw - 28), by + 8 + y * (bh - 16) * 1.05]; }
+                     : f => trackXY(f, bx, by, bw, bh);
+    g.strokeStyle = C.white; g.lineWidth = isSpa ? 4 : 6; g.lineJoin = "round"; g.beginPath();
+    for (let i = 0; i <= 200; i++) { const [x, y] = at(i / 200); i ? g.lineTo(x, y) : g.moveTo(x, y); }
     g.stroke();
-    const [cx, cy] = trackXY(t.track_pos / 10000, bx, by, bw, bh);
+    if (isSpa) {  // start/finish line and sector marks
+      const sf = at(0); rect(sf[0] - 6, sf[1] - 2, 12, 4, C.red);
+      for (const f of SPA.sectors) { const [x, y] = at(f); g.fillStyle = C.yellow; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
+    }
+    const [cx, cy] = at(t.track_pos / 10000);
     g.fillStyle = C.lime; g.beginPath(); g.arc(cx, cy, 9, 0, 7); g.fill();
     g.strokeStyle = "#000"; g.lineWidth = 2; g.stroke();
     const pct = S.fuel && S.fuel.capacity_x10 ? Math.round(S.fuel.liters_x10 / S.fuel.capacity_x10 * 100) : 0;
@@ -1147,7 +1792,7 @@ function sendSnapshot(snap, now) {
     lastSent.hello = now;
     wire(encodeFrame(MSG.HELLO, Uint8Array.of(1)));
     wire(enc.config({ page_mask: 0xFF, brightness: 200, units: ui.imperial ? 3 : 0 }));
-    wire(encodeFrame(MSG.TRACK, new TextEncoder().encode(TRACK)));
+    wire(encodeFrame(MSG.TRACK, new TextEncoder().encode(mode === "spa" ? SPA.name : TRACK)));
   }
   wire(enc.telemetry(snap.t));
   wire(enc.engine(snap.engine));
@@ -1158,11 +1803,25 @@ function sendSnapshot(snap, now) {
   }
 }
 
-function updateLeds(screen, now) {
+const stripEls = { top: [], left: [], right: [] };
+for (const [id, key, n] of [["stripTop", "top", 12], ["stripLeft", "left", 4], ["stripRight", "right", 4]]) {
+  for (let i = 0; i < n; i++) { const d = document.createElement("span"); d.className = "px"; $(id).appendChild(d); stripEls[key].push(d); }
+}
+function paint(el, name) {
+  const c = RGB[name];
+  el.style.background = c || "";
+  el.style.boxShadow = c && !name.startsWith("dim") ? `0 0 8px 2px ${c}aa, inset 0 0 3px #fff8` : "";
+}
+function updateLeds(screen, now, alertKind) {
   const [l, r] = ledsFor(screen, S, now);
   $("led1").className = "led" + (l ? " on-" + l : "");
   $("led2").className = "led" + (r ? " on-" + r : "");
+  const [T, Lf, Rt] = stripFor(screen, S, alertKind, now);
+  T.forEach((c, i) => paint(stripEls.top[i], c));
+  Lf.forEach((c, i) => paint(stripEls.left[i], c));
+  Rt.forEach((c, i) => paint(stripEls.right[i], c));
 }
+let mode = "spa", speed = 1, srcClock = 0, lastTick = performance.now();
 
 const SCREEN_LABEL = { NoSignal: "Waiting for telemetry", RaceFlag: "Race flag", LapInvalidated: "Lap invalidated",
   Alert: "Warning popup", PitLimiter: "Pit limiter", EngineOff: "Engine off", ...PAGE_LABEL };
@@ -1171,7 +1830,8 @@ function tick() {
   const now = performance.now();
   if (now - lastSend >= 33) {
     lastSend = now;
-    const snap = demo.poll(now);
+    srcClock += (now - lastTick) * (mode === "spa" ? speed : 1); lastTick = now;
+    const snap = mode === "spa" ? spa.poll(srcClock) : demo.poll(now);
     if (ui.usb) sendSnapshot(snap, now);
     let f;
     while ((f = parser.next())) {
@@ -1185,7 +1845,9 @@ function tick() {
   const a = alerts.current(now);
   const screen = sm.current(now, !!a);
   render(screen, now);
-  updateLeds(screen, now);
+  updateLeds(screen, now, a && a.kind);
+  $("cornerWrap").hidden = mode !== "spa";
+  if (mode === "spa") $("corner").textContent = `Lap ${Math.min(spa.lap, SPA.script.laps)}/${SPA.script.laps} · ${spa.corner || "—"}`;
   $("screenName").textContent = SCREEN_LABEL[screen];
   $("frameCount").textContent = frames;
   $("crcErrors").textContent = parser.crcErrors;
@@ -1252,6 +1914,18 @@ function radio(groupId, attr, onPick) {
   });
 }
 radio("flagButtons", "data-flag", v => { ui.flag = Number(v); });
+radio("modeButtons", "data-mode", v => {
+  mode = v;
+  if (v === "spa") { spa = new SpaRace(); srcClock = 0; }
+  lastSent.hello = 0;  // resend track name now
+  $("modeNote").textContent = v === "spa"
+    ? "Scripted race at Spa: pit exit, track limits at Raidillon, yellow at Pouhon, blue flag at Blanchimont, safety car with rain arriving, last lap, chequered flag. Flags and weather come from the script."
+    : "Free play: set flags, weather, pit limiter and car settings yourself.";
+  for (const id of ["flagButtons", "weatherButtons"]) $(id).querySelectorAll("button").forEach(b => { b.disabled = v === "spa"; });
+});
+radio("speedButtons", "data-speed", v => { speed = Number(v); });
+radio("ledButtons", "data-leds", v => { $("device").dataset.leds = v; });
+for (const id of ["flagButtons", "weatherButtons"]) $(id).querySelectorAll("button").forEach(b => { b.disabled = true; });
 radio("weatherButtons", "data-w", v => { ui.weather = v; });
 $("tPit").addEventListener("change", e => { ui.pit = e.target.checked; });
 $("tEngine").addEventListener("change", e => { ui.engine = e.target.checked; });

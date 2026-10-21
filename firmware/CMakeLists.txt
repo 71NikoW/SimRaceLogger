@@ -30,3 +30,11 @@ target_compile_definitions(core_tests PRIVATE
 
 enable_testing()
 add_test(NAME core_tests COMMAND core_tests)
+
+# Compile + link check of the board layer (src/main.cpp) against stub
+# Arduino headers. Catches typos and API drift without the ESP32 toolchain.
+add_executable(board_compile_check src/main.cpp test/stubs/stubs.cpp)
+target_include_directories(board_compile_check PRIVATE test/stubs)
+target_link_libraries(board_compile_check rigdash_core)
+target_compile_options(board_compile_check PRIVATE -Wall -Wextra -Werror)
+add_test(NAME board_compile_check COMMAND board_compile_check)

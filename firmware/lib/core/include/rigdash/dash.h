@@ -33,4 +33,34 @@ enum class Screen : uint8_t;
 // race flag → shift lights → idle blue.
 Leds ledsFor(Screen screen, const State& s, uint32_t now_ms);
 
+// --- LED frame (WS2812B / SK6812 strip around the display) -----------------
+// Index order: top bar left→right, then left side top→bottom, then right
+// side top→bottom. The driver scales by brightness; colours here are full.
+struct Rgb {
+  uint8_t r = 0, g = 0, b = 0;
+  bool operator==(const Rgb& o) const { return r == o.r && g == o.g && b == o.b; }
+  bool off() const { return r == 0 && g == 0 && b == 0; }
+};
+struct StripLayout {
+  uint8_t top = 12;   // shift lights
+  uint8_t side = 4;   // per side: flags, warnings, delta
+  constexpr uint16_t count() const { return top + 2u * side; }
+};
+namespace rgb {
+constexpr Rgb kOff{0, 0, 0}, kGreen{0, 255, 0}, kYellow{255, 190, 0}, kRed{255, 0, 0},
+    kBlue{0, 60, 255}, kCyan{0, 200, 255}, kWhite{255, 255, 255}, kOrange{255, 90, 0},
+    kPurple{170, 0, 255}, kDimBlue{0, 10, 45}, kDimGreen{0, 40, 0}, kDimRed{45, 0, 0};
+}
+
+enum class AlertKind : uint8_t;
+// Fills `out` (layout.count() entries).
+//  top:   shift lights green → yellow → red, all flash blue at the shift
+//         point; pit limiter = alternating halves blue; no signal = scanner.
+//  sides: flag colour (blinking; chequered alternates), pit limiter green,
+//         lap invalid red, alert colour by category, otherwise dim delta
+//         colour (green faster / red slower) or dim blue.
+void stripFor(Screen screen, const State& s, AlertKind alert, uint32_t now_ms,
+              const StripLayout& layout, Rgb* out);
+Rgb alertColour(AlertKind kind);
+
 }  // namespace rigdash

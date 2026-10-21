@@ -97,12 +97,26 @@ While a flag is waved every screen shows a flag-coloured strip.
 heavier · track drying · wet tyres advised (on slicks in medium rain or a
 wet track). Each fires once per change, not every frame.
 
-**LEDs** (two RGB on top): pit limiter blinks green → flag colour blinks →
-shift lights (green, then yellow, red flash at the shift point) → blue idle.
+**LED frame** (WS2812B chain, default 12 on top + 4 per side):
+
+- top bar = shift lights: green → yellow → red, all flash blue at the shift
+  point; alternating halves blue with the pit limiter; a slow scanner while
+  waiting for telemetry
+- sides = flag colour (blinking; safety car / VSC / chequered alternate
+  left and right), pit limiter green, invalid lap red, warning colour
+  (weather cyan, fuel/penalty orange, damage red, track limits yellow,
+  setting change blue), otherwise dim green/red for the live delta
+
+Builds with just **two status LEDs** get the same priorities in simple form.
+
+**Demo sources:** `demo` (free play, endless laps, weather cycle) and `spa`
+— a scripted 6-lap race at Spa-Francorchamps with pit exit, track limits at
+Raidillon, yellow at Pouhon, blue flag at Blanchimont, a safety-car lap with
+rain arriving, last lap and the chequered flag.
 
 ## Hardware (proposal, to be validated)
 
-See [HARDWARE.md](HARDWARE.md).
+See [BUILD.md](BUILD.md) — parts list, wiring and steps.
 
 ## Test strategy
 

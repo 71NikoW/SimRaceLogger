@@ -99,3 +99,98 @@ TEST(leds_shift_lights) {
   CHECK(ledsFor(Screen::CurrentLap, s, 0).left == Led::Red);
   CHECK(ledsFor(Screen::CurrentLap, s, 60).left == Led::Off);
 }
+
+#include <vector>
+
+#include "rigdash/alerts.h"
+
+static std::vector<Rgb> strip(Screen sc, const State& s, uint32_t now, AlertKind a = AlertKind::None,
+                              StripLayout l = StripLayout{}) {
+  std::vector<Rgb> out(l.count());
+  stripFor(sc, s, a, now, l, out.data());
+  return out;
+}
+
+TEST(strip_shift_lights_fill_and_flash) {
+  State s = driving();
+  s.has_engine = true;
+  s.engine = eng(6000);
+  auto o = strip(Screen::CurrentLap, s, 0);
+  for (int i = 0; i < 12; ++i) CHECK(o[i].off());
+  s.engine = eng(6999);
+  o = strip(Screen::CurrentLap, s, 0);
+  CHECK(o[0] == rgb::kGreen && o[5] == rgb::kGreen);
+  CHECK(o[6] == rgb::kYellow && o[8] == rgb::kYellow);
+  CHECK(o[9] == rgb::kRed && o[11] == rgb::kRed);
+  s.engine = eng(6650);
+  o = strip(Screen::CurrentLap, s, 0);
+  CHECK(!o[5].off() && o[7].off());
+  s.engine = eng(7200);
+  CHECK(strip(Screen::CurrentLap, s, 0)[3] == rgb::kBlue);
+  CHECK(strip(Screen::CurrentLap, s, 60)[3].off());
+}
+
+TEST(strip_pit_limiter_alternates) {
+  State s = driving();
+  s.telemetry.flags |= kFlagPitLimiter;
+  auto a = strip(Screen::PitLimiter, s, 0);
+  auto b = strip(Screen::PitLimiter, s, kBlinkPeriodMs / 2);
+  CHECK(a[0] == rgb::kBlue && a[11].off());
+  CHECK(b[0].off() && b[11] == rgb::kBlue);
+  CHECK(a[12] == rgb::kGreen && b[12].off());
+}
+
+TEST(strip_flags_on_sides) {
+  State s = driving();
+  s.telemetry.race_flag = RaceFlag::Yellow;
+  auto o = strip(Screen::CurrentLap, s, 0);
+  for (int i = 12; i < 20; ++i) CHECK(o[i] == rgb::kYellow);
+  CHECK(strip(Screen::CurrentLap, s, kBlinkPeriodMs / 2)[12].off());
+  s.telemetry.race_flag = RaceFlag::SafetyCar;  // left/right take turns
+  o = strip(Screen::CurrentLap, s, 0);
+  CHECK(o[12] == rgb::kYellow && o[16].off());
+  CHECK(o[13].off() && o[17] == rgb::kYellow);
+}
+
+TEST(strip_alert_invalid_delta_and_idle) {
+  State s = driving();
+  CHECK(strip(Screen::CurrentLap, s, 0)[12] == rgb::kDimBlue);
+  s.telemetry.best_lap_ms = 90000;
+  s.telemetry.delta_ms = -200;
+  CHECK(strip(Screen::CurrentLap, s, 0)[15] == rgb::kDimGreen);
+  s.telemetry.delta_ms = 300;
+  CHECK(strip(Screen::CurrentLap, s, 0)[19] == rgb::kDimRed);
+  CHECK(strip(Screen::Alert, s, 0, AlertKind::RainSoon)[12] == rgb::kCyan);
+  CHECK(strip(Screen::Alert, s, 0, AlertKind::LowFuel)[12] == rgb::kOrange);
+  CHECK(strip(Screen::LapInvalidated, s, 0)[12] == rgb::kRed);
+}
+
+TEST(strip_no_signal_scanner_and_engine_off) {
+  State s = driving();
+  int lit = 0;
+  for (const Rgb& c : strip(Screen::NoSignal, s, 1234)) lit += !c.off();
+  CHECK_EQ(lit, 1);
+  for (const Rgb& c : strip(Screen::EngineOff, s, 0)) CHECK(c.off());
+}
+
+TEST(strip_custom_layouts) {
+  State s = driving();
+  s.has_engine = true;
+  s.engine = eng(6999);
+  StripLayout l;
+  l.top = 16;
+  l.side = 0;
+  auto o = strip(Screen::CurrentLap, s, 0, AlertKind::None, l);
+  CHECK_EQ(o.size(), 16u);
+  CHECK(o[15] == rgb::kRed);
+  l.top = 0;
+  l.side = 3;
+  o = strip(Screen::CurrentLap, s, 0, AlertKind::None, l);
+  CHECK_EQ(o.size(), 6u);
+  l.top = 1;  // single LED: scanner must stay in range
+  l.side = 0;
+  for (uint32_t t = 0; t < 5000; t += 37) {
+    o = strip(Screen::NoSignal, s, t, AlertKind::None, l);
+    CHECK_EQ(o.size(), 1u);
+  }
+}

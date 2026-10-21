@@ -1,5 +1,6 @@
 #include "rigdash/dash.h"
 
+#include "rigdash/alerts.h"
 #include "rigdash/screen_manager.h"
 
 namespace rigdash {
@@ -82,6 +83,117 @@ Leds ledsFor(Screen screen, const State& s, uint32_t now) {
   }
   if (screen != Screen::EngineOff) l.left = l.right = Led::Blue;
   return l;
+}
+
+Rgb alertColour(AlertKind k) {
+  switch (k) {
+    case AlertKind::RainSoon:
+    case AlertKind::RainStarted:
+    case AlertKind::RainIncreasing:
+    case AlertKind::WetTyresAdvised: return rgb::kCyan;
+    case AlertKind::TrackDrying:
+    case AlertKind::PitWindowOpen: return rgb::kGreen;
+    case AlertKind::LowFuel:
+    case AlertKind::FuelShort:
+    case AlertKind::Penalty: return rgb::kOrange;
+    case AlertKind::Damage: return rgb::kRed;
+    case AlertKind::TrackLimits: return rgb::kYellow;
+    case AlertKind::Abs:
+    case AlertKind::Tc:
+    case AlertKind::TcCut:
+    case AlertKind::EngineMap:
+    case AlertKind::BrakeBias: return rgb::kBlue;
+    case AlertKind::LastLap: return rgb::kWhite;
+    case AlertKind::None: break;
+  }
+  return rgb::kOff;
+}
+
+namespace {
+Rgb flagRgb(RaceFlag f) {
+  switch (f) {
+    case RaceFlag::Yellow:
+    case RaceFlag::SafetyCar:
+    case RaceFlag::VirtualSafetyCar: return rgb::kYellow;
+    case RaceFlag::Blue: return rgb::kBlue;
+    case RaceFlag::Black:
+    case RaceFlag::Red: return rgb::kRed;
+    case RaceFlag::White:
+    case RaceFlag::Chequered: return rgb::kWhite;
+    default: return rgb::kOff;
+  }
+}
+
+void fillTop(Screen screen, const State& s, uint32_t now, uint8_t n, Rgb* top) {
+  for (uint8_t i = 0; i < n; ++i) top[i] = rgb::kOff;
+  if (n == 0 || screen == Screen::EngineOff) return;
+  if (screen == Screen::NoSignal) {
+    // Slow "waiting" scanner bouncing left and right.
+    const uint32_t period = 2u * n;
+    const uint32_t step = (now / 120u) % (period > 2 ? period - 2 : 1);
+    const uint8_t pos = static_cast<uint8_t>(step < n ? step : period - 2 - step);
+    top[pos < n ? pos : n - 1] = rgb::kDimBlue;
+    return;
+  }
+  if (s.telemetry.has(kFlagPitLimiter)) {
+    const bool phase = blinkOn(now);
+    for (uint8_t i = 0; i < n; ++i) top[i] = ((i < n / 2) == phase) ? rgb::kBlue : rgb::kOff;
+    return;
+  }
+  if (!s.has_engine) return;
+  if (shiftNow(s.engine)) {
+    if (blinkOn(now, 100)) {
+      for (uint8_t i = 0; i < n; ++i) top[i] = rgb::kBlue;
+    }
+    return;
+  }
+  const uint8_t lit = shiftLedsLit(s.engine, n);
+  for (uint8_t i = 0; i < lit; ++i) {
+    const uint16_t pct = static_cast<uint16_t>((i + 1u) * 100u / n);
+    top[i] = pct <= 50 ? rgb::kGreen : pct <= 80 ? rgb::kYellow : rgb::kRed;
+  }
+}
+
+void fillSides(Screen screen, const State& s, AlertKind alert, uint32_t now, uint8_t n, Rgb* left,
+               Rgb* right) {
+  Rgb c = rgb::kOff;
+  bool alternate = false;  // left/right (and neighbours) take turns
+  const bool blink = blinkOn(now);
+  const RaceFlag flag = s.telemetry.race_flag;
+  if (screen == Screen::NoSignal || screen == Screen::EngineOff) {
+    c = rgb::kOff;
+  } else if (!flagRgb(flag).off()) {
+    c = flagRgb(flag);
+    alternate = flag == RaceFlag::Chequered || flag == RaceFlag::SafetyCar ||
+                flag == RaceFlag::VirtualSafetyCar;
+    if (!alternate && !blink) c = rgb::kOff;
+  } else if (s.telemetry.has(kFlagPitLimiter)) {
+    c = blink ? rgb::kGreen : rgb::kOff;
+  } else if (screen == Screen::LapInvalidated) {
+    c = rgb::kRed;
+  } else if (alert != AlertKind::None) {
+    c = blink ? alertColour(alert) : rgb::kOff;
+  } else if (s.telemetry.best_lap_ms != 0) {
+    c = s.telemetry.delta_ms <= 0 ? rgb::kDimGreen : rgb::kDimRed;
+  } else {
+    c = rgb::kDimBlue;
+  }
+  for (uint8_t i = 0; i < n; ++i) {
+    if (alternate) {
+      const bool on = ((i & 1) == 0) == blink;
+      left[i] = on ? c : rgb::kOff;
+      right[i] = on ? rgb::kOff : c;
+    } else {
+      left[i] = right[i] = c;
+    }
+  }
+}
+}  // namespace
+
+void stripFor(Screen screen, const State& s, AlertKind alert, uint32_t now, const StripLayout& l,
+              Rgb* out) {
+  fillTop(screen, s, now, l.top, out);
+  fillSides(screen, s, alert, now, l.side, out + l.top, out + l.top + l.side);
 }
 
 }  // namespace rigdash
