@@ -63,6 +63,8 @@ TEST(gear) {
 TEST(race_flag_text) {
   CHECK_STR(raceFlagText(RaceFlag::Yellow), "YELLOW FLAG");
   CHECK_STR(raceFlagText(RaceFlag::Chequered), "CHEQUERED FLAG");
+  CHECK_STR(raceFlagText(RaceFlag::SafetyCar), "SAFETY CAR");
+  CHECK_STR(raceFlagText(RaceFlag::VirtualSafetyCar), "VIRTUAL SAFETY CAR");
   CHECK_STR(raceFlagText(RaceFlag::None), "");
   CHECK_STR(raceFlagText(static_cast<RaceFlag>(42)), "");
 }

@@ -262,6 +262,8 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
           <button type="button" data-flag="5" aria-pressed="false"><i style="--f:#000"></i>Black</button>
           <button type="button" data-flag="6" aria-pressed="false"><i class="cheq"></i>Chequered</button>
           <button type="button" data-flag="7" aria-pressed="false"><i style="--f:#e11d1d"></i>Red</button>
+          <button type="button" data-flag="8" aria-pressed="false"><i style="--f:#ffd60a"></i>Safety car</button>
+          <button type="button" data-flag="9" aria-pressed="false"><i style="--f:#ffd60a"></i>VSC / FCY</button>
         </div>
       </div>
 
@@ -291,7 +293,8 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 const SOF = 0xA5, MAX_PAYLOAD = 64;
 const MSG_HELLO = 0x01, MSG_TELEMETRY = 0x10, MSG_TRACK_INFO = 0x11;
 const F_PIT = 1, F_INPIT = 2, F_INVALID = 4, F_ENGINE = 8, F_IGN = 16;
-const FLAGS = ["", "GREEN", "YELLOW", "BLUE", "WHITE", "BLACK", "CHEQUERED", "RED"];
+const FLAGS = ["", "GREEN", "YELLOW", "BLUE", "WHITE", "BLACK", "CHEQUERED", "RED", "SAFETY CAR", "VSC"];
+const FLAG_TITLES = ["", "GREEN FLAG", "YELLOW FLAG", "BLUE FLAG", "WHITE FLAG", "BLACK FLAG", "CHEQUERED FLAG", "RED FLAG", "SAFETY CAR", "VIRTUAL SAFETY CAR"];
 
 function crc16(bytes) {
   let crc = 0xFFFF;
@@ -342,7 +345,7 @@ function decodeTelemetry(p) {
     position: d.getUint8(22), gear: d.getInt8(23), speed_kmh: d.getUint16(24, true),
     fuel_laps_x10: d.getUint16(26, true), track_pos: d.getUint16(28, true),
     air_temp_x10: d.getInt16(30, true), track_temp_x10: d.getInt16(32, true),
-    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0, race_flag: rf <= 7 ? rf : 0,
+    flags: d.getUint16(34, true) & 0x1F, session: s <= 4 ? s : 0, race_flag: rf <= 9 ? rf : 0,
   };
 }
 class FrameParser {
@@ -513,7 +516,7 @@ function trackXY(frac, bx, by, bw, bh) {
   return [bx + bw / 2 + x * bw * 0.36, by + bh / 2 + y * bh * 0.62];
 }
 
-const FLAG_COLORS = { 1: "#22c55e", 2: "#ffd60a", 3: "#2f7bff", 4: "#f4f6fa", 5: "#000000", 7: "#e11d1d" };
+const FLAG_COLORS = { 1: "#22c55e", 2: "#ffd60a", 3: "#2f7bff", 4: "#f4f6fa", 5: "#000000", 7: "#e11d1d", 8: "#ffd60a", 9: "#ffd60a" };
 function drawFlag(f, x, y, w, h) {
   if (f === 6) {  // chequered
     const n = 6, m = 4, cw = w / n, ch = h / m;
@@ -522,12 +525,16 @@ function drawFlag(f, x, y, w, h) {
     rect(x, y, w, h, FLAG_COLORS[f] || "#333");
     if (f === 3) { g.fillStyle = "#ffd60a"; g.beginPath(); g.moveTo(x, y + h); g.lineTo(x + w * 0.35, y + h); g.lineTo(x + w, y); g.lineTo(x + w * 0.65, y); g.closePath(); g.fill(); }
   }
+  if (f === 8 || f === 9) {  // yellow board with SC / VSC lettering
+    const s = f === 8 ? "SC" : "VSC";
+    font(800, Math.round(h * 0.62)); text(s, x + w / 2, y + h * 0.76, "#111", "center");
+  }
   if (f === 5 || f === 6) { g.strokeStyle = "#5d6578"; g.lineWidth = 2; g.strokeRect(x, y, w, h); }
 }
 // Thin strip down the left edge of every screen while a flag (other than green) is waved.
 function flagStrip(f, now) {
   if (f <= 1) return;
-  const visible = (f === 2 || f === 3 || f === 7) ? blinkOn(now) : true;
+  const visible = (f === 2 || f === 3 || f === 7 || f >= 8) ? blinkOn(now) : true;
   if (!visible) return;
   if (f === 6) { drawFlag(6, 0, 0, 10, H); return; }
   rect(0, 0, 8, H, f === 5 ? "#ff5a3c" : FLAG_COLORS[f]);
@@ -536,9 +543,15 @@ function flagStrip(f, now) {
 const screens = {
   RaceFlag(t, now) {
     const f = t.race_flag;
+    if (f >= 8) {  // safety car: blinking yellow board, big SC / VSC
+      rect(0, 0, W, H, blinkOn(now) ? "#ffd60a" : "#2a2200");
+      font(800, 150); text(f === 8 ? "SC" : "VSC", W / 2, 168, blinkOn(now) ? "#111" : "#ffd60a", "center");
+      font(800, 46); text(FLAG_TITLES[f], W / 2, 250, blinkOn(now) ? "#111" : "#ffd60a", "center");
+      return;
+    }
     drawFlag(f, 0, 0, W, H);
     const light = f === 2 || f === 4 || f === 1;
-    const label = `${FLAGS[f]} FLAG`;
+    const label = FLAG_TITLES[f];
     if (f === 6 || f === 3) { rect(0, H / 2 - 52, W, 104, "rgba(0,0,0,.78)"); }
     font(800, 96); text(label, W / 2, H / 2 + 34, f === 6 || f === 3 ? C.white : light ? "#111" : C.white, "center");
   },
@@ -654,7 +667,7 @@ const sm = new ScreenManager();
 let latest = null, frames = 0, lastSend = 0, lastHello = -1e9, lastHex = null;
 
 const LED = { blue: "on-blue", green: "on-green", red: "on-red" };
-const LED_FLAG = { 2: "on-yellow", 3: "on-blue", 5: "on-red", 7: "on-red", 4: "on-white", 6: "on-white" };
+const LED_FLAG = { 2: "on-yellow", 3: "on-blue", 5: "on-red", 7: "on-red", 4: "on-white", 6: "on-white", 8: "on-yellow", 9: "on-yellow" };
 function setLeds(screen, now, t) {
   let cls = "";
   const f = t ? t.race_flag : 0;

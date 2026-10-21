@@ -138,6 +138,9 @@ TEST(decode_telemetry_race_flag) {
   buf[37] = 3;
   CHECK(decodeTelemetry(buf, sizeof buf, t));
   CHECK(t.race_flag == RaceFlag::Blue);
+  buf[37] = 9;
+  CHECK(decodeTelemetry(buf, sizeof buf, t));
+  CHECK(t.race_flag == RaceFlag::VirtualSafetyCar);
   buf[37] = 99;
   CHECK(decodeTelemetry(buf, sizeof buf, t));
   CHECK(t.race_flag == RaceFlag::None);

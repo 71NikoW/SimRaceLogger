@@ -72,7 +72,7 @@ Taken from the reference pictures:
 | Current lap       | Big running lap time, session type, position, fuel laps, lap no.| default page                      |
 | Track data        | Track name, mini map with car position, fuel %, air/track temp  | page selected by button           |
 | Last lap / delta  | Last lap, best lap, delta to best                                | page selected by button           |
-| Race flag         | Full-screen flag (yellow, blue, black, chequered …)             | 3 s after the flag changes        |
+| Race flag         | Full-screen flag (yellow, blue, black, chequered, SC, VSC …)    | 3 s after the flag changes        |
 | Pit limiter       | Blinking green banner + gear, speed, position, last pit stop, flag | pit limiter active             |
 | Lap invalidated   | Red warning                                                     | 2.5 s after lap becomes invalid   |
 | Engine off        | "ENGINE OFF"                                                    | engine not running                |

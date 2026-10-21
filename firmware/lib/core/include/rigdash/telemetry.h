@@ -16,7 +16,8 @@ enum Flags : uint16_t {
 enum class Session : uint8_t { Unknown = 0, Practice = 1, Qualifying = 2, Race = 3, Hotlap = 4 };
 
 enum class RaceFlag : uint8_t {
-  None = 0, Green = 1, Yellow = 2, Blue = 3, White = 4, Black = 5, Chequered = 6, Red = 7
+  None = 0, Green = 1, Yellow = 2, Blue = 3, White = 4, Black = 5, Chequered = 6, Red = 7,
+  SafetyCar = 8, VirtualSafetyCar = 9  // VSC also covers full course yellow
 };
 
 struct Telemetry {

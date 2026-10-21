@@ -38,7 +38,7 @@ bool decodeTelemetry(const uint8_t* p, size_t len, Telemetry& t) {
   t.flags = u16(p + 34) & 0x1F;
   t.session = p[36] <= 4 ? static_cast<Session>(p[36]) : Session::Unknown;
   const uint8_t flag = len > 37 ? p[37] : 0;
-  t.race_flag = flag <= 7 ? static_cast<RaceFlag>(flag) : RaceFlag::None;
+  t.race_flag = flag <= 9 ? static_cast<RaceFlag>(flag) : RaceFlag::None;
   return true;
 }
 

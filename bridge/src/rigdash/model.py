@@ -23,6 +23,8 @@ class RaceFlag(IntEnum):
     BLACK = 5
     CHEQUERED = 6
     RED = 7
+    SAFETY_CAR = 8
+    VIRTUAL_SAFETY_CAR = 9  # also full course yellow / slow zones
 
 
 class Flag(IntFlag):

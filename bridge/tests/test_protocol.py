@@ -67,6 +67,8 @@ def test_unknown_session_value_maps_to_unknown():
 def test_race_flag_roundtrip_and_unknown_value():
     payload = bytearray(encode_telemetry(Telemetry(race_flag=RaceFlag.BLUE))[3:-2])
     assert decode_telemetry(bytes(payload)).race_flag is RaceFlag.BLUE
+    payload[37] = 8
+    assert decode_telemetry(bytes(payload)).race_flag is RaceFlag.SAFETY_CAR
     payload[37] = 200
     assert decode_telemetry(bytes(payload)).race_flag is RaceFlag.NONE
 

@@ -62,6 +62,8 @@ const char* raceFlagText(RaceFlag f) {
     case RaceFlag::Black: return "BLACK FLAG";
     case RaceFlag::Chequered: return "CHEQUERED FLAG";
     case RaceFlag::Red: return "RED FLAG";
+    case RaceFlag::SafetyCar: return "SAFETY CAR";
+    case RaceFlag::VirtualSafetyCar: return "VIRTUAL SAFETY CAR";
     case RaceFlag::None: break;
   }
   return "";

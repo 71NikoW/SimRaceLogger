@@ -84,7 +84,7 @@ def decode_telemetry(payload: bytes) -> Telemetry:
         delta_ms=v[4], lap_number=v[5], position=v[6], gear=v[7], speed_kmh=v[8],
         fuel_laps_x10=v[9], track_pos=v[10], air_temp_x10=v[11], track_temp_x10=v[12],
         flags=Flag(v[13] & 0x1F), session=Session(v[14]) if v[14] <= 4 else Session.UNKNOWN,
-        race_flag=RaceFlag(v[15]) if v[15] <= 7 else RaceFlag.NONE,
+        race_flag=RaceFlag(v[15]) if v[15] <= 9 else RaceFlag.NONE,
     )
 
 

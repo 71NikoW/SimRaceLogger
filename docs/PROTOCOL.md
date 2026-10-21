@@ -46,7 +46,7 @@ Sent once on connect and every few seconds.
 | track_temp_x10 | i16  | °C × 10                                            |
 | flags          | u16  | see below                                          |
 | session        | u8   | 0 unknown, 1 practice, 2 qualifying, 3 race, 4 hotlap |
-| race_flag      | u8   | 0 none, 1 green, 2 yellow, 3 blue, 4 white, 5 black, 6 chequered, 7 red |
+| race_flag      | u8   | 0 none, 1 green, 2 yellow, 3 blue, 4 white, 5 black, 6 chequered, 7 red, 8 safety car, 9 virtual safety car / full course yellow |
 
 `race_flag` was appended after the first draft; 37-byte payloads without it
 are still accepted and decode as `none`.
